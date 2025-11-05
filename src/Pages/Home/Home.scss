@@ -1,0 +1,812 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@500;700&display=swap');
+
+.home-page {
+  width: 100%;
+  min-height: 100vh;
+  background: #030A1B;
+  padding-top: 15px;
+}
+
+.hero-section {
+  width: 100%;
+  max-width: 1440px;
+  height: 762px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  transition: height 0.3s ease;
+}
+
+.hero-banner {
+  width: 100%;
+  height: 673px;
+  background: #030A1B;
+  position: relative;
+}
+
+.banner-image {
+  width: 1170px;
+  height: 795px;
+  position: absolute;
+  left: 276px;
+  top: -1px;
+  object-fit: cover;
+}
+
+.gradient-overlay {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.gradient-main {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(86deg, #030A1B 31.37%, rgba(3, 10, 27, 0.06) 95.91%);
+  filter: blur(25px);
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.gradient-bottom {
+  width: 100%;
+  height: 103px;
+  background: #030A1B;
+  filter: blur(25px);
+  position: absolute;
+  left: 0;
+  bottom: 0;
+}
+
+.witcher-logo {
+  width: 650px;
+  height: 311px;
+  position: absolute;
+  left: 134px;
+  top: 154px;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+
+.film-posters {
+  width: 693px;
+  height: 174px;
+  position: absolute;
+  right: 0;
+  top: 471px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.poster-item {
+  border-radius: 20px;
+  border: 0.5px solid rgba(0, 100, 134, 0.99);
+  background: #EC5BAA;
+  position: absolute;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  overflow: hidden;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+  
+  .poster-overlay {
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    background: #030A1B;
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+  }
+}
+
+.poster-active {
+  width: 174px;
+  height: 174px;
+  border: 1px solid rgba(0, 100, 134, 0.99);
+  background: #BEEFFF;
+  box-shadow: 0 14px 42px -8px rgba(112, 144, 176, 0.20);
+  left: 212px;
+  top: 0;
+  z-index: 3;
+  transform: scale(1);
+  
+  .poster-overlay {
+    opacity: 0;
+  }
+}
+
+.poster-next {
+  width: 122px;
+  height: 122px;
+  left: 364px;
+  top: 26px;
+  z-index: 2;
+  transform: scale(0.95);
+  
+  .poster-overlay {
+    opacity: 0.5;
+  }
+}
+
+.poster-prev {
+  width: 122px;
+  height: 122px;
+  left: 106px;
+  top: 26px;
+  z-index: 2;
+  transform: scale(0.95);
+  
+  .poster-overlay {
+    opacity: 0.5;
+  }
+}
+
+.poster-hidden {
+  width: 122px;
+  height: 122px;
+  left: 465px;
+  top: 26px;
+  z-index: 1;
+  transform: scale(0.9);
+  
+  .poster-overlay {
+    opacity: 0.5;
+  }
+}
+
+.hero-content {
+  width: 553px;
+  position: absolute;
+  left: 66px;
+  top: 471px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hero-title {
+  color: #EBFAFF;
+  text-align: center;
+  font-family: Lato, -apple-system, Roboto, Helvetica, sans-serif;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: normal;
+  margin: 0;
+}
+
+.hero-description {
+  min-width: 429px;
+  color: #FFF;
+  font-family: Lato, -apple-system, Roboto, Helvetica, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: normal;
+  margin: 0;
+}
+
+.hero-ratings {
+  width: 250.569px;
+  height: 32px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.star-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.star-full,
+.star-base {
+  width: 20px;
+  height: 20px;
+}
+
+.star-half-container {
+  width: 8px;
+  height: 18px;
+  position: relative;
+  overflow: hidden;
+  
+  .star-base {
+    position: absolute;
+    left: 0;
+    top: -1px;
+  }
+  
+  .star-cover {
+    width: 13px;
+    height: 23px;
+    background: #030A1B;
+    position: absolute;
+    left: 8px;
+    top: -3px;
+  }
+}
+
+.imdb-rating {
+  width: 65px;
+  height: 20px;
+  position: absolute;
+  left: 122px;
+  top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.imdb-logo {
+  width: 37px;
+  height: 20px;
+  border-radius: 5px;
+  background: #D9D9D9;
+  position: relative;
+  overflow: hidden;
+  
+  img {
+    width: 92px;
+    height: 30px;
+    border-radius: 4px;
+    position: absolute;
+    left: -2px;
+    top: -5px;
+  }
+}
+
+.rating-value {
+  color: #FFF;
+  text-align: center;
+  font-family: Lato, -apple-system, Roboto, Helvetica, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: normal;
+}
+
+.netflix-logo {
+  width: 54px;
+  height: 14px;
+  position: absolute;
+  left: 197px;
+  top: 9px;
+}
+
+.hero-actions {
+  width: 307px;
+  height: 40px;
+  position: absolute;
+  left: 66px;
+  top: 675px;
+  display: flex;
+  gap: 11px;
+}
+
+.btn-watch {
+  display: flex;
+  width: 168px;
+  height: 40px;
+  padding: 10px 40px 11px 23px;
+  align-items: center;
+  gap: 17px;
+  border-radius: 28px;
+  background: #228EE5;
+  border: none;
+  color: #EBFAFF;
+  text-align: center;
+  font-family: Lato, -apple-system, Roboto, Helvetica, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: normal;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: #1a7bc7;
+    transform: scale(1.05);
+  }
+  
+  .play-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.btn-info {
+  display: flex;
+  width: 128px;
+  height: 40px;
+  padding: 10px 19px 11px 33px;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 28px;
+  border: 1px solid #228EE5;
+  background: transparent;
+  color: #EBFAFF;
+  text-align: center;
+  font-family: Lato, -apple-system, Roboto, Helvetica, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: normal;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(34, 142, 229, 0.1);
+    transform: scale(1.05);
+  }
+  
+  .arrow-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 1440px) {
+  .hero-section {
+    max-width: 100%;
+    padding: 0 20px;
+  }
+
+  .banner-image {
+    width: 81%;
+    left: 19%;
+  }
+}
+
+@media (max-width: 1200px) {
+  .witcher-logo {
+    width: 500px;
+    height: 239px;
+    left: 80px;
+    top: 130px;
+  }
+
+  .film-posters {
+    width: 550px;
+    right: 50px;
+  }
+
+  .hero-content {
+    width: 480px;
+    left: 80px;
+  }
+
+  .hero-actions {
+    left: 80px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .hero-section {
+    height: 700px;
+  }
+
+  .hero-banner {
+    height: 650px;
+  }
+
+  .witcher-logo {
+    width: 400px;
+    height: 191px;
+    left: 50px;
+    top: 100px;
+  }
+
+  .film-posters {
+    width: 450px;
+    height: 130px;
+    top: 350px;
+    right: 30px;
+  }
+
+  .poster-active {
+    width: 130px;
+    height: 130px;
+    left: 135px;
+  }
+
+  .poster-next,
+  .poster-prev,
+  .poster-hidden {
+    width: 90px;
+    height: 90px;
+  }
+
+  .poster-next {
+    left: 255px;
+    top: 20px;
+  }
+
+  .poster-prev {
+    left: 65px;
+    top: 20px;
+  }
+
+  .poster-hidden {
+    left: 340px;
+    top: 20px;
+  }
+
+  .hero-content {
+    width: 450px;
+    left: 50px;
+    top: 310px;
+  }
+
+  .hero-title {
+    font-size: 36px;
+  }
+
+  .hero-description {
+    font-size: 14px;
+    min-width: 350px;
+  }
+
+  .hero-actions {
+    left: 50px;
+    top: 550px;
+  }
+}
+
+@media (max-width: 900px) {
+  .hero-section {
+    height: 720px;
+  }
+
+  .hero-banner {
+    height: 670px;
+  }
+
+  .witcher-logo {
+    width: 350px;
+    height: 167px;
+    left: 40px;
+    top: 90px;
+  }
+
+  .film-posters {
+    width: 420px;
+    height: 120px;
+    top: 340px;
+    right: 20px;
+  }
+
+  .poster-active {
+    width: 120px;
+    height: 120px;
+    left: 125px;
+  }
+
+  .poster-next,
+  .poster-prev,
+  .poster-hidden {
+    width: 80px;
+    height: 80px;
+  }
+
+  .poster-next {
+    left: 235px;
+    top: 20px;
+  }
+
+  .poster-prev {
+    left: 60px;
+    top: 20px;
+  }
+
+  .poster-hidden {
+    left: 315px;
+    top: 20px;
+  }
+
+  .hero-content {
+    width: 420px;
+    left: 40px;
+    top: 280px;
+  }
+
+  .hero-title {
+    font-size: 32px;
+  }
+
+  .hero-description {
+    font-size: 13.5px;
+    min-width: 100%;
+  }
+
+  .hero-actions {
+    left: 40px;
+    top: 540px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    height: 750px;
+  }
+
+  .hero-banner {
+    height: 700px;
+  }
+
+  .banner-image {
+    width: 100%;
+    height: 100%;
+    left: 0;
+    object-position: center;
+  }
+
+  .witcher-logo {
+    width: 280px;
+    height: 134px;
+    left: 30px;
+    top: 80px;
+  }
+
+  .film-posters {
+    width: calc(100% - 60px);
+    max-width: 400px;
+    height: 100px;
+    top: auto;
+    bottom: 170px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+
+  .poster-active {
+    width: 100px;
+    height: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .poster-next,
+  .poster-prev,
+  .poster-hidden {
+    width: 70px;
+    height: 70px;
+  }
+
+  .poster-next {
+    left: calc(50% + 50px);
+    top: 15px;
+  }
+
+  .poster-prev {
+    left: calc(50% - 120px);
+    top: 15px;
+  }
+
+  .poster-hidden {
+    left: calc(50% + 120px);
+    top: 15px;
+  }
+
+  .hero-content {
+    width: calc(100% - 60px);
+    left: 30px;
+    top: 230px;
+  }
+
+  .hero-title {
+    font-size: 28px;
+    text-align: left;
+  }
+
+  .hero-description {
+    font-size: 13px;
+    min-width: 100%;
+  }
+
+  .hero-actions {
+    width: calc(100% - 60px);
+    left: 30px;
+    top: auto;
+    bottom: 50px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    height: 700px;
+  }
+
+  .hero-banner {
+    height: 650px;
+  }
+
+  .witcher-logo {
+    width: 220px;
+    height: 105px;
+    left: 20px;
+    top: 60px;
+  }
+
+  .film-posters {
+    width: calc(100% - 40px);
+    max-width: 320px;
+    height: 80px;
+    top: auto;
+    bottom: 160px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+
+  .poster-active {
+    width: 80px;
+    height: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .poster-next,
+  .poster-prev,
+  .poster-hidden {
+    width: 55px;
+    height: 55px;
+  }
+
+  .poster-next {
+    left: calc(50% + 45px);
+    top: 12px;
+  }
+
+  .poster-prev {
+    left: calc(50% - 100px);
+    top: 12px;
+  }
+
+  .poster-hidden {
+    left: calc(50% + 100px);
+    top: 12px;
+  }
+
+  .hero-content {
+    width: calc(100% - 40px);
+    left: 20px;
+    top: 180px;
+  }
+
+  .hero-title {
+    font-size: 24px;
+  }
+
+  .hero-description {
+    font-size: 12px;
+  }
+
+  .hero-ratings {
+    transform: scale(0.85);
+    transform-origin: left;
+  }
+
+  .hero-actions {
+    width: calc(100% - 40px);
+    left: 20px;
+    top: auto;
+    bottom: 50px;
+    gap: 8px;
+  }
+
+  .btn-watch {
+    width: 140px;
+    padding: 10px 30px 11px 20px;
+    font-size: 14px;
+  }
+
+  .btn-info {
+    width: 100px;
+    padding: 10px 15px 11px 25px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .hero-section {
+    height: 650px;
+  }
+
+  .hero-banner {
+    height: 600px;
+  }
+
+  .witcher-logo {
+    width: 180px;
+    height: 86px;
+    left: 15px;
+    top: 50px;
+  }
+
+  .film-posters {
+    width: calc(100% - 30px);
+    max-width: 280px;
+    height: 70px;
+    bottom: 150px;
+  }
+
+  .poster-active {
+    width: 70px;
+    height: 70px;
+  }
+
+  .poster-next,
+  .poster-prev,
+  .poster-hidden {
+    width: 48px;
+    height: 48px;
+  }
+
+  .poster-next {
+    left: calc(50% + 38px);
+    top: 11px;
+  }
+
+  .poster-prev {
+    left: calc(50% - 86px);
+    top: 11px;
+  }
+
+  .poster-hidden {
+    left: calc(50% + 86px);
+    top: 11px;
+  }
+
+  .hero-content {
+    width: calc(100% - 30px);
+    left: 15px;
+    top: 150px;
+  }
+
+  .hero-title {
+    font-size: 20px;
+  }
+
+  .hero-description {
+    font-size: 11px;
+  }
+
+  .hero-ratings {
+    transform: scale(0.75);
+  }
+
+  .hero-actions {
+    width: calc(100% - 30px);
+    left: 15px;
+    bottom: 40px;
+    flex-direction: column;
+    height: auto;
+    gap: 10px;
+  }
+
+  .btn-watch,
+  .btn-info {
+    width: 100%;
+    justify-content: center;
+  }
+}
