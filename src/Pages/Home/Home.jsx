@@ -1,8 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import './Home.scss';
 import FAQ from '../../Components/FAQ/FAQ';
 import Studios from '../../Components/Studios/Studios';
 import Footer from '../../Components/Footer/Footer';
+import Movie from '../../Components/Movie/Movie';
+import Series from '../../Components/Series/Series';
+import { useMovies } from '../../hooks/useMovies';
+import { useDoramas } from '../../hooks/useDoramas';
+import { POSTER_PLACEHOLDER } from '../../constants/placeholders';
+import { getCurrentUser } from '../../Backend/authService';
+import { addToFavorites } from '../../Backend/favoritesService';
+
+// Маппинг русских названий жанров на английские
+const genreMapping = {
+  'Драма': ['Драма', 'Drama', 'драма'],
+  'Боевик': ['Боевик', 'Action', 'Экшн', 'боевик', 'action', 'экшн'],
+  'Исследования': ['Исследования', 'Research', 'исследования'],
+  'Роман': ['Роман', 'Romance', 'Романтика', 'роман', 'romance', 'романтика'],
+  'Фантастика': ['Фантастика', 'Fantasy', 'Sci-Fi', 'Science Fiction', 'фантастика', 'fantasy'],
+  'Комедия': ['Комедия', 'Comedy', 'комедия', 'comedy'],
+  'Анимация': ['Анимация', 'Animation', 'анимация', 'animation'],
+  'Триллер': ['Триллер', 'Thriller', 'триллер', 'thriller'],
+  'Мистическое': ['Мистическое', 'Mystery', 'Мистика', 'мистическое', 'mystery', 'мистика'],
+  'Историческое': ['Историческое', 'History', 'Исторический', 'историческое', 'history', 'исторический']
+};
 
 const homePlans = [
   {
@@ -41,9 +62,126 @@ const homePlans = [
 
 function Home({ onNavigate }) {
   const [activeIndex, setActiveIndex] = useState(1);
-  const [selectedMovieGenres, setSelectedMovieGenres] = useState(['Drama', 'Action', 'Fantasy', 'Thriller']);
-  const [selectedSeriesGenres, setSelectedSeriesGenres] = useState(['Action', 'Adventure', 'Fantasy', 'Thriller']);
+  const [selectedMovieGenres, setSelectedMovieGenres] = useState(['Драма', 'Боевик', 'Фантастика', 'Триллер']);
+  const [selectedSeriesGenres, setSelectedSeriesGenres] = useState(['Драма', 'Роман', 'Боевик']);
+  
+  // Загрузка данных из Firebase
+  const { movies, loading: moviesLoading } = useMovies();
+  const { doramas, loading: doramasLoading } = useDoramas();
 
+  const genres = ['Драма', 'Боевик', 'Исследования', 'Роман', 'Фантастика', 'Комедия', 'Анимация', 'Триллер', 'Мистическое', 'Историческое'];
+
+  // Создаем список популярного, чередуя фильмы и дорамы через одну
+  const trendingItems = useMemo(() => {
+    const items = [];
+    let movieIndex = 0;
+    let doramaIndex = 0;
+    const maxItems = 20;
+    
+    // Чередуем: фильм, дорама, фильм, дорама...
+    while (items.length < maxItems && (movieIndex < movies.length || doramaIndex < doramas.length)) {
+      // Добавляем фильм (если есть)
+      if (movieIndex < movies.length && items.length < maxItems) {
+        items.push({ ...movies[movieIndex], type: 'movie' });
+        movieIndex++;
+      }
+      // Добавляем дораму (если есть)
+      if (doramaIndex < doramas.length && items.length < maxItems) {
+        items.push({ ...doramas[doramaIndex], type: 'dorama' });
+        doramaIndex++;
+      }
+    }
+    
+    return items;
+  }, [movies, doramas]);
+
+  // Фильтруем фильмы по выбранным жанрам
+  const filteredMovies = useMemo(() => {
+    if (selectedMovieGenres.length === 0) return movies;
+    return movies.filter(movie => {
+      if (!movie.genres || movie.genres.length === 0) return false;
+      return selectedMovieGenres.some((selectedGenre) => {
+        const genreVariants = genreMapping[selectedGenre] || [selectedGenre];
+        return movie.genres.some((movieGenre) => {
+          const movieGenreLower = (movieGenre || '').toLowerCase();
+          return genreVariants.some(variant => 
+            variant.toLowerCase() === movieGenreLower
+          );
+        });
+      });
+    });
+  }, [movies, selectedMovieGenres]);
+
+  // Фильтруем дорамы по выбранным жанрам
+  const filteredDoramas = useMemo(() => {
+    if (selectedSeriesGenres.length === 0) return doramas;
+    return doramas.filter(dorama => {
+      if (!dorama.genres || dorama.genres.length === 0) return false;
+      return selectedSeriesGenres.some((selectedGenre) => {
+        const genreVariants = genreMapping[selectedGenre] || [selectedGenre];
+        return dorama.genres.some((doramaGenre) => {
+          const doramaGenreLower = (doramaGenre || '').toLowerCase();
+          return genreVariants.some(variant => 
+            variant.toLowerCase() === doramaGenreLower
+          );
+        });
+      });
+    });
+  }, [doramas, selectedSeriesGenres]);
+
+  // Обработчики для открытия фильма/дорамы
+  const openMovie = (movieId) => {
+    onNavigate?.('movieshow', null, { movieId });
+  };
+
+  const openDorama = (doramaId) => {
+    onNavigate?.('movieshow', null, { movieId: doramaId, type: 'dorama' });
+  };
+
+  // Обработчики для добавления в избранное
+  const handleAddMovieToFavorites = async (movieId) => {
+    const user = getCurrentUser();
+    if (!user) {
+      if (onNavigate) {
+        onNavigate('login');
+      }
+      return;
+    }
+
+    try {
+      const result = await addToFavorites(user.uid, movieId);
+      if (result.success) {
+        console.log('Фильм добавлен в избранное');
+      } else {
+        console.error('Ошибка добавления в избранное:', result.error);
+      }
+    } catch (error) {
+      console.error('Ошибка добавления в избранное:', error);
+    }
+  };
+
+  const handleAddDoramaToFavorites = async (doramaId) => {
+    const user = getCurrentUser();
+    if (!user) {
+      if (onNavigate) {
+        onNavigate('login');
+      }
+      return;
+    }
+
+    try {
+      const result = await addToFavorites(user.uid, doramaId);
+      if (result.success) {
+        console.log('Дорама добавлена в избранное');
+      } else {
+        console.error('Ошибка добавления в избранное:', result.error);
+      }
+    } catch (error) {
+      console.error('Ошибка добавления в избранное:', error);
+    }
+  };
+
+  // Статический массив для hero секции
   const films = [
     {
       id: 1,
@@ -67,42 +205,8 @@ function Home({ onNavigate }) {
     }
   ];
 
-  const trendingMovies = [
-    { id: 1, image: 'https://api.builder.io/api/v1/image/assets/TEMP/63cc4423bd528e794a76a53663beeb6aa3297757?width=422' },
-    { id: 2, image: 'https://api.builder.io/api/v1/image/assets/TEMP/df4235baef7ac0a13384ae2c8cd442a19feacaf6?width=422' },
-    { id: 3, image: 'https://api.builder.io/api/v1/image/assets/TEMP/2144eff44163b5ebb1f0def9adf42d5886aee6cd?width=558' },
-    { id: 4, image: 'https://api.builder.io/api/v1/image/assets/TEMP/3f9d4a60f38c827392cb93d0c9feed335d0151fa?width=634' },
-    { id: 5, image: 'https://api.builder.io/api/v1/image/assets/TEMP/62fa83178a9cec7b14d66a5ae1b0f01aa604e9c9?width=422' },
-    { id: 6, image: 'https://api.builder.io/api/v1/image/assets/TEMP/1269ccb99d4f01832b5183c81d09f927972d9050?width=422' },
-    { id: 7, image: 'https://api.builder.io/api/v1/image/assets/TEMP/320ab5f2abc2e662da42d1c528a527e3c8f070ca?width=416' },
-    { id: 8, image: 'https://api.builder.io/api/v1/image/assets/TEMP/320ab5f2abc2e662da42d1c528a527e3c8f070ca?width=416' }
-  ];
-
-  const moviesList = [
-    { id: 1, image: 'https://api.builder.io/api/v1/image/assets/TEMP/451d16b777f9c197719470d611f8e7ea7a6f716b?width=416' },
-    { id: 2, image: 'https://api.builder.io/api/v1/image/assets/TEMP/673ec092422aeecf07aa901d9905e1609f221bdd?width=416' },
-    { id: 3, image: 'https://api.builder.io/api/v1/image/assets/TEMP/e2e6e75f6546865cb00505fd31ed8f6234d930b0?width=684' },
-    { id: 4, image: 'https://api.builder.io/api/v1/image/assets/TEMP/0e7e43f7bf226ed4e7378bae1638a3fcb1c412b6?width=580' },
-    { id: 5, image: 'https://api.builder.io/api/v1/image/assets/TEMP/ac00b2e3577a6801a7a98a2cfb708baf2535877a?width=416' },
-    { id: 6, image: 'https://api.builder.io/api/v1/image/assets/TEMP/36d5e291dc1af3d58db1c0c97bee9b8108a281e7?width=578' },
-    { id: 7, image: 'https://api.builder.io/api/v1/image/assets/TEMP/320ab5f2abc2e662da42d1c528a527e3c8f070ca?width=416' },
-    { id: 8, image: 'https://api.builder.io/api/v1/image/assets/TEMP/320ab5f2abc2e662da42d1c528a527e3c8f070ca?width=1318' }
-  ];
-
-  const seriesList = [
-    { id: 1, image: 'https://api.builder.io/api/v1/image/assets/TEMP/ab22231e4199dd44c4e2694b86275b890a051850?width=416' },
-    { id: 2, image: 'https://api.builder.io/api/v1/image/assets/TEMP/9629587e120f58a5f4b9882ff3ada4961b62d472?width=416' },
-    { id: 3, image: 'https://api.builder.io/api/v1/image/assets/TEMP/c37edbd49729ff584ffbdc2eb201861fbd105762?width=1106' },
-    { id: 4, image: 'https://api.builder.io/api/v1/image/assets/TEMP/c6d95a719854e4dd9e2f601616ae9e5eb2957e4b?width=510' },
-    { id: 5, image: 'https://api.builder.io/api/v1/image/assets/TEMP/b7ea631e1ae7df308012af880c808ad84242783f?width=416' },
-    { id: 6, image: 'https://api.builder.io/api/v1/image/assets/TEMP/92d92b49f49392488b3e7fab4ed90da954b4497c?width=906' },
-    { id: 7, image: 'https://api.builder.io/api/v1/image/assets/TEMP/320ab5f2abc2e662da42d1c528a527e3c8f070ca?width=416' },
-    { id: 8, image: 'https://api.builder.io/api/v1/image/assets/TEMP/320ab5f2abc2e662da42d1c528a527e3c8f070ca?width=416' }
-  ];
-
-  const genres = ['Drama', 'Action', 'Adventure', 'Romance', 'Fantasy', 'Comedy', 'Animation', 'Thriller', 'Mystery', 'historical'];
-
   useEffect(() => {
+    if (films.length === 0) return;
     const interval = setInterval(() => {
       setActiveIndex((prevIndex) => (prevIndex + 1) % films.length);
     }, 3000);
@@ -287,17 +391,45 @@ function Home({ onNavigate }) {
         </div>
         <div className="movies-scroll">
           <div className="movies-list">
-            {trendingMovies.map(movie => (
-              <div key={movie.id} className="movie-card">
-                <img src={movie.image} alt={`Movie ${movie.id}`} />
-                <button className="add-btn">
-                  <svg className="plus-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <rect x="10" y="0" width="5" height="24" rx="2" fill="#EBFAFF"/>
-                    <rect x="0" y="10" width="24" height="5" rx="2" fill="#EBFAFF"/>
-                  </svg>
-                </button>
-              </div>
-            ))}
+            {moviesLoading || doramasLoading ? (
+              Array.from({ length: 8 }).map((_, index) => (
+                <div key={`trending-skeleton-${index}`} className="movie-card">
+                  <img src={POSTER_PLACEHOLDER} alt="Загрузка..." />
+                </div>
+              ))
+            ) : trendingItems.length > 0 ? (
+              trendingItems.map(item => {
+                if (item.type === 'movie') {
+                  return (
+                    <Movie
+                      key={`movie-${item.id}`}
+                      image={item.posterUrl || POSTER_PLACEHOLDER}
+                      alt={item.title}
+                      title={item.title}
+                      subtitle={[item.releaseYear, item.genres?.[0]].filter(Boolean).join(' • ')}
+                      onClick={() => openMovie(item.id)}
+                      onAddToFavorites={handleAddMovieToFavorites}
+                      movieId={item.id}
+                    />
+                  );
+                } else {
+                  return (
+                    <Series
+                      key={`dorama-${item.id}`}
+                      image={item.posterUrl || POSTER_PLACEHOLDER}
+                      alt={item.title}
+                      title={item.title}
+                      subtitle={[item.releaseYear, item.genres?.[0]].filter(Boolean).join(' • ')}
+                      onClick={() => openDorama(item.id)}
+                      onAddToFavorites={handleAddDoramaToFavorites}
+                      doramaId={item.id}
+                    />
+                  );
+                }
+              })
+            ) : (
+              <div className="movies-status">Нет доступного контента</div>
+            )}
           </div>
         </div>
       </section>
@@ -340,17 +472,28 @@ function Home({ onNavigate }) {
 
         <div className="movies-scroll">
           <div className="movies-list">
-            {moviesList.map(movie => (
-              <div key={movie.id} className="movie-card">
-                <img src={movie.image} alt={`Movie ${movie.id}`} />
-                <button className="add-btn">
-                  <svg className="plus-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <rect x="10" y="0" width="5" height="24" rx="2" fill="#EBFAFF"/>
-                    <rect x="0" y="10" width="24" height="5" rx="2" fill="#EBFAFF"/>
-                  </svg>
-                </button>
-              </div>
-            ))}
+            {moviesLoading ? (
+              Array.from({ length: 8 }).map((_, index) => (
+                <div key={`movies-skeleton-${index}`} className="movie-card">
+                  <img src={POSTER_PLACEHOLDER} alt="Загрузка..." />
+                </div>
+              ))
+            ) : filteredMovies.length > 0 ? (
+              filteredMovies.map(movie => (
+                <Movie
+                  key={movie.id}
+                  image={movie.posterUrl || POSTER_PLACEHOLDER}
+                  alt={movie.title}
+                  title={movie.title}
+                  subtitle={[movie.releaseYear, movie.genres?.[0]].filter(Boolean).join(' • ')}
+                  onClick={() => openMovie(movie.id)}
+                  onAddToFavorites={handleAddMovieToFavorites}
+                  movieId={movie.id}
+                />
+              ))
+            ) : (
+              <div className="movies-status">Нет фильмов по выбранным критериям</div>
+            )}
           </div>
         </div>
       </section>
@@ -358,7 +501,7 @@ function Home({ onNavigate }) {
       <section className="series-section">
         <div className="section-backdrop"></div>
         <div className="section-header">
-          <h2 className="section-title">Сериалы</h2>
+          <h2 className="section-title">Дорамы</h2>
           <button className="see-more-btn">
             Больше
             <svg width="24" height="24" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -393,17 +536,28 @@ function Home({ onNavigate }) {
 
         <div className="movies-scroll">
           <div className="movies-list">
-            {seriesList.map(series => (
-              <div key={series.id} className="movie-card">
-                <img src={series.image} alt={`Series ${series.id}`} />
-                <button className="add-btn">
-                  <svg className="plus-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <rect x="10" y="0" width="5" height="24" rx="2" fill="#EBFAFF"/>
-                    <rect x="0" y="10" width="24" height="5" rx="2" fill="#EBFAFF"/>
-                  </svg>
-                </button>
-              </div>
-            ))}
+            {doramasLoading ? (
+              Array.from({ length: 8 }).map((_, index) => (
+                <div key={`doramas-skeleton-${index}`} className="movie-card">
+                  <img src={POSTER_PLACEHOLDER} alt="Загрузка..." />
+                </div>
+              ))
+            ) : filteredDoramas.length > 0 ? (
+              filteredDoramas.map(dorama => (
+                <Series
+                  key={dorama.id}
+                  image={dorama.posterUrl || POSTER_PLACEHOLDER}
+                  alt={dorama.title}
+                  title={dorama.title}
+                  subtitle={[dorama.releaseYear, dorama.genres?.[0]].filter(Boolean).join(' • ')}
+                  onClick={() => openDorama(dorama.id)}
+                  onAddToFavorites={handleAddDoramaToFavorites}
+                  doramaId={dorama.id}
+                />
+              ))
+            ) : (
+              <div className="movies-status">Нет дорам по выбранным критериям</div>
+            )}
           </div>
         </div>
       </section>

@@ -1,7 +1,7 @@
 ﻿:root {
   --background: var(--color-bg-primary);
   --primary: #228EE5;
-  --primary-light: var(--color-text-primary);
+  --primary-light: #EBFAFF;
   --primary-shade: #0E4877;
   --primary-light-shade: #65D9FF;
   --secondary-tint: #EC5BAA;
@@ -13,6 +13,7 @@
   min-height: 100vh;
   font-family: Lato, -apple-system, Roboto, Helvetica, sans-serif;
   overflow-x: hidden;
+  color: var(--primary-light);
 }
 
 .movie-state {
@@ -39,8 +40,9 @@
 .v2hero-banner {
   position: relative;
   width: 100%;
-  height: 760px;
+  height: calc(760px + var(--header-height, 120px));
   overflow: hidden;
+  margin-top: calc(-1 * var(--header-height, 120px));
 }
 
 .v2hero-image {
@@ -89,10 +91,16 @@
 
 .v2movie-info {
   position: absolute;
-  left: 115px;
+  left: 64px;
   top: 378px;
   z-index: 5;
   max-width: 400px;
+  padding: 24px 32px;
+  background: rgba(3, 10, 27, 0.75);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .v2movie-title {
@@ -101,6 +109,7 @@
   font-weight: 700;
   margin: 0 0 12px 0;
   line-height: 1;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
 .v2movie-meta {
@@ -108,11 +117,13 @@
   font-size: 24px;
   font-weight: 500;
   margin-bottom: 8px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 
 .v2movie-director {
   font-size: 18px;
   color: rgba(235, 250, 255, 0.8);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 
 .v2movie-rating {
@@ -141,6 +152,9 @@
 }
 
 .v2btn-watch {
+  position: absolute;
+  left: -100px;
+  top: 156px;
   display: flex;
   height: 64px;
   padding: 16px 32px;
@@ -191,7 +205,7 @@
 .v2likes-section {
   position: absolute;
   left: 104px;
-  top: 620px;
+  top: 650px;
   display: flex;
   align-items: stretch;
   gap: 16px;
@@ -199,9 +213,13 @@
 }
 
 .v2thumbs-buttons {
+  position: absolute;
+  left: -38px;
+  top: 65px;
   display: flex;
-  flex-wrap: wrap;
+  align-items: stretch;
   gap: 16px;
+  z-index: 5;
 }
 
 .v2icon-pill {
@@ -404,7 +422,8 @@
   width: 40px;
   height: 40px;
   border-radius: 500px;
-  background: #FFF;
+  background: rgba(34, 142, 229, 0.3);
+  border: 1px solid rgba(34, 142, 229, 0.5);
   left: 12px;
   top: 12px;
   overflow: hidden;
@@ -420,7 +439,7 @@
   position: absolute;
   left: 64px;
   top: 22px;
-  color: var(--gray);
+  color: var(--primary-light);
   font-size: 16px;
   font-weight: 500;
 }
@@ -444,7 +463,7 @@
 }
 
 .v2like-count {
-  color: var(--gray);
+  color: var(--primary-light);
   font-size: 10px;
   font-weight: 500;
 }
@@ -511,7 +530,7 @@
 
 @media (max-width: 1440px) {
   .v2hero-banner {
-    height: 650px;
+    height: calc(650px + var(--header-height, 120px));
   }
   
   .v2movie-logo {
@@ -527,7 +546,7 @@
   }
   
   .v2likes-section {
-    top: 540px;
+    top: 570px;
   }
 }
 
@@ -545,6 +564,7 @@
   
   .v2movie-info {
     left: 80px;
+    padding: 20px 28px;
   }
   
   .v2movie-title {
@@ -558,7 +578,7 @@
 
 @media (max-width: 992px) {
   .v2hero-banner {
-    height: 600px;
+    height: calc(600px + var(--header-height, 120px));
   }
   
   
@@ -585,7 +605,7 @@
   }
   
   .v2likes-section {
-    top: 510px;
+    top: 540px;
   }
   
   .v2btn-watch,
@@ -614,12 +634,14 @@
 @media (max-width: 768px) {
   
   .v2hero-banner {
-    height: 500px;
+    height: calc(500px + var(--header-height, 120px));
   }
   
   .v2movie-info {
     left: 40px;
     top: 280px;
+    padding: 20px 24px;
+    max-width: calc(100% - 80px);
   }
   
   .v2movie-title {
@@ -649,7 +671,7 @@
   
   .v2likes-section {
     left: 40px;
-    top: 490px;
+    top: 520px;
     flex-direction: row;
     gap: 20px;
     flex-wrap: wrap;
@@ -733,7 +755,7 @@
 
 @media (max-width: 576px) {
   .v2hero-banner {
-    height: 450px;
+    height: calc(450px + var(--header-height, 120px));
   }
   
   
@@ -741,6 +763,7 @@
     left: 20px;
     top: 240px;
     max-width: calc(100% - 40px);
+    padding: 16px 20px;
   }
   
   .v2movie-title {
@@ -777,8 +800,7 @@
   
   .v2likes-section {
     left: 20px;
-    bottom: 20px;
-    top: auto;
+    top: 460px;
   }
   
   .v2icon-button {

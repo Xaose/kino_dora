@@ -33,6 +33,7 @@ function App() {
       setSelectedMovieId(options.movieId);
     }
 
+    const wasDifferentPage = currentPage !== page;
     setCurrentPage(page);
 
     if (!targetId) {
@@ -40,17 +41,26 @@ function App() {
       return;
     }
 
-    setTimeout(() => {
+    // Увеличиваем задержку, если переходим с другой страницы
+    const delay = wasDifferentPage ? 300 : 120;
+    
+    const scrollToElement = (attempts = 0) => {
       const el = document.getElementById(targetId);
       if (el) {
         const headerOffset = 100;
         const elementPosition = el.getBoundingClientRect().top + window.scrollY;
         const offsetPosition = Math.max(0, elementPosition - headerOffset);
         window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+      } else if (attempts < 10) {
+        // Повторяем попытку, если элемент еще не найден
+        setTimeout(() => scrollToElement(attempts + 1), 50);
       } else {
+        // Если элемент не найден после всех попыток, просто скроллим вверх
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
-    }, 120);
+    };
+
+    setTimeout(() => scrollToElement(), delay);
   };
 
   const renderPage = () => {

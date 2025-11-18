@@ -87,7 +87,7 @@ function MovieShow({ onNavigate, selectedMovieId }) {
               <div className="v2action-buttons">
                 <button className="v2btn-watch" onClick={handleWatch}>
                   <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path fillRule="evenodd" clipRule="evenodd" d="M2.5 9.42108C2.5 7.04419 5.04833 5.53744 7.131 6.6829L26.3653 17.2618C28.524 18.449 28.524 21.5509 26.3653 22.7381L7.13099 33.317C5.04833 34.4625 2.5 32.9557 2.5 30.5788V9.42108Z" fill="var(--color-text-primary)"/>
+                    <path fillRule="evenodd" clipRule="evenodd" d="M2.5 9.42108C2.5 7.04419 5.04833 5.53744 7.131 6.6829L26.3653 17.2618C28.524 18.449 28.524 21.5509 26.3653 22.7381L7.13099 33.317C5.04833 34.4625 2.5 32.9557 2.5 30.5788V9.42108Z" fill="#EBFAFF"/>
                   </svg>
                   Смотреть
                 </button>

@@ -28,7 +28,7 @@ function FAQ() {
   ];
 
   return (
-    <section className="faq-section" id="faq-section">
+    <section className="faq-section" id="faq-selection">
       <h2 className="faq-title">Часто задаваемые вопросы:</h2>
       
       <div className="faq-container">
