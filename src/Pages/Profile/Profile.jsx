@@ -10,7 +10,7 @@ function Profile({ onNavigate }) {
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('profile'); // 'profile' РёР»Рё 'favorites'
+  const [activeTab, setActiveTab] = useState('profile'); // 'profile' или 'favorites'
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -38,7 +38,7 @@ function Profile({ onNavigate }) {
         setLoading(false);
         loadFavorites(user.uid);
       } else {
-        // Р•СЃР»Рё РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ, РїРµСЂРµРЅР°РїСЂР°РІР»СЏРµРј РЅР° СЃС‚СЂР°РЅРёС†Сѓ РІС…РѕРґР°
+        // Если пользователь не авторизован, перенаправляем на страницу входа
         if (onNavigate) {
           onNavigate('login');
         }
@@ -56,7 +56,7 @@ function Profile({ onNavigate }) {
       if (result.success) {
         setFavorites(result.favorites || []);
         
-        // Р—Р°РіСЂСѓР¶Р°РµРј РґР°РЅРЅС‹Рµ С„РёР»СЊРјРѕРІ
+        // Загружаем данные фильмов
         if (result.favorites && result.favorites.length > 0) {
           const moviesPromises = result.favorites.map(movieId => 
             moviesService.getById(movieId).catch(() => null)
@@ -68,7 +68,7 @@ function Profile({ onNavigate }) {
         }
       }
     } catch (err) {
-      console.error('РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РёР·Р±СЂР°РЅРЅРѕРіРѕ:', err);
+      console.error('Ошибка загрузки избранного:', err);
     } finally {
       setLoadingFavorites(false);
     }
@@ -96,28 +96,28 @@ function Profile({ onNavigate }) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // РџСЂРѕРІРµСЂРєР° С‚РёРїР° С„Р°Р№Р»Р°
+    // Проверка типа файла
     if (!file.type || !file.type.startsWith('image/')) {
-      setError('Р’С‹Р±РµСЂРёС‚Рµ РёР·РѕР±СЂР°Р¶РµРЅРёРµ');
+      setError('Выберите изображение');
       return;
     }
 
-    // РџСЂРѕРІРµСЂРєР° СЂР°Р·РјРµСЂР° (РјР°РєСЃРёРјСѓРј 2MB РґР»СЏ data URL, С‡С‚РѕР±С‹ РЅРµ РїРµСЂРµРіСЂСѓР¶Р°С‚СЊ Firestore)
+    // Проверка размера (максимум 2MB для data URL, чтобы не перегружать Firestore)
     if (file.size > 2 * 1024 * 1024) {
-      setError('Р Р°Р·РјРµСЂ С„Р°Р№Р»Р° РЅРµ РґРѕР»Р¶РµРЅ РїСЂРµРІС‹С€Р°С‚СЊ 2MB');
+      setError('Размер файла не должен превышать 2MB');
       return;
     }
 
     setError('');
 
-    // РџСЂРµРѕР±СЂР°Р·СѓРµРј С„Р°Р№Р» РІ data URL (base64)
+    // Преобразуем файл в data URL (base64)
     const reader = new FileReader();
     reader.onloadend = () => {
-      // reader.result СЃРѕРґРµСЂР¶РёС‚ data URL (РЅР°РїСЂРёРјРµСЂ: "data:image/jpeg;base64,/9j/4AAQ...")
+      // reader.result содержит data URL (например: "data:image/jpeg;base64,/9j/4AAQ...")
       setCustomAvatarDataUrl(reader.result);
     };
     reader.onerror = () => {
-      setError('РћС€РёР±РєР° РїСЂРё С‡С‚РµРЅРёРё С„Р°Р№Р»Р°');
+      setError('Ошибка при чтении файла');
     };
     reader.readAsDataURL(file);
   };
@@ -136,30 +136,30 @@ function Profile({ onNavigate }) {
     try {
       const updates = {};
 
-      // РћР±РЅРѕРІР»СЏРµРј РёРјСЏ
+      // Обновляем имя
       if (formData.name !== userData?.name) {
         updates.name = formData.name;
       }
 
-      // РћР±РЅРѕРІР»СЏРµРј Р»РѕРіРёРЅ
+      // Обновляем логин
       if (formData.username !== userData?.username) {
         updates.username = formData.username;
       }
 
-      // РЎРѕС…СЂР°РЅСЏРµРј Р°РІР°С‚Р°СЂ РєР°Рє data URL (base64) РїСЂСЏРјРѕ РІ Firestore
+      // Сохраняем аватар как data URL (base64) прямо в Firestore
       if (customAvatarDataUrl) {
-        // customAvatarDataUrl СѓР¶Рµ СЃРѕРґРµСЂР¶РёС‚ РїРѕР»РЅС‹Р№ data URL (РЅР°РїСЂРёРјРµСЂ: "data:image/jpeg;base64,...")
+        // customAvatarDataUrl Сѓже содержит полный data URL (например: "data:image/jpeg;base64,...")
         updates.profileImage = customAvatarDataUrl;
       }
 
-      // РЎРѕС…СЂР°РЅСЏРµРј РёР·РјРµРЅРµРЅРёСЏ
+      // Сохраняем изменения
       if (Object.keys(updates).length > 0) {
         const result = await updateUserProfile(user.uid, updates);
         if (!result.success) {
-          throw new Error(result.error || 'РћС€РёР±РєР° РѕР±РЅРѕРІР»РµРЅРёСЏ РїСЂРѕС„РёР»СЏ');
+          throw new Error(result.error || 'Ошибка обновления профиля');
         }
 
-        // РћР±РЅРѕРІР»СЏРµРј Р»РѕРєР°Р»СЊРЅРѕРµ СЃРѕСЃС‚РѕСЏРЅРёРµ
+        // Обновляем локальное состояние
         const updatedUserData = { ...userData, ...updates };
         setUserData(updatedUserData);
         setFormData({
@@ -168,14 +168,14 @@ function Profile({ onNavigate }) {
           email: updatedUserData.email || ''
         });
         setCustomAvatarDataUrl(null);
-        setSuccess('РџСЂРѕС„РёР»СЊ СѓСЃРїРµС€РЅРѕ РѕР±РЅРѕРІР»РµРЅ');
+        setSuccess('Профиль успешно обновлен');
         setEditing(false);
       } else {
         setEditing(false);
       }
     } catch (err) {
-      setError(err.message || 'РћС€РёР±РєР° РїСЂРё СЃРѕС…СЂР°РЅРµРЅРёРё');
-      console.error('РћС€РёР±РєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ РїСЂРѕС„РёР»СЏ:', err);
+      setError(err.message || 'Ошибка при сохранении');
+      console.error('Ошибка сохранения профиля:', err);
     } finally {
       setLoading(false);
     }
@@ -190,11 +190,11 @@ function Profile({ onNavigate }) {
           onNavigate('home');
         }
       } else {
-        setError(result.error || 'РћС€РёР±РєР° РїСЂРё РІС‹С…РѕРґРµ');
+        setError(result.error || 'Ошибка при выходе');
       }
     } catch (err) {
-      setError('РћС€РёР±РєР° РїСЂРё РІС‹С…РѕРґРµ');
-      console.error('РћС€РёР±РєР° РІС‹С…РѕРґР°:', err);
+      setError('Ошибка при выходе');
+      console.error('Ошибка выхода:', err);
     } finally {
       setLoading(false);
     }
@@ -212,18 +212,18 @@ function Profile({ onNavigate }) {
     return (
       <div className="profile-page">
         <div className="profile-container">
-          <div className="loading-message">Р—Р°РіСЂСѓР·РєР°...</div>
+          <div className="loading-message">Загрузка...</div>
         </div>
       </div>
     );
   }
 
   if (!user) {
-    return null; // Р РµРґРёСЂРµРєС‚ СѓР¶Рµ РїСЂРѕРёР·РѕС€РµР»
+    return null; // Редирект Сѓже произошел
   }
 
-  // РСЃРїРѕР»СЊР·СѓРµРј РЅРѕРІС‹Р№ Р°РІР°С‚Р°СЂ РёР· РїСЂРµРІСЊСЋ РёР»Рё СЃРѕС…СЂР°РЅРµРЅРЅС‹Р№ РІ РїСЂРѕС„РёР»Рµ
-  // Data URL РјРѕР¶РµС‚ Р±С‹С‚СЊ РєР°Рє РёР· customAvatarDataUrl (РЅРѕРІС‹Р№, РµС‰Рµ РЅРµ СЃРѕС…СЂР°РЅРµРЅРЅС‹Р№), С‚Р°Рє Рё РёР· userData.profileImage (СѓР¶Рµ СЃРѕС…СЂР°РЅРµРЅРЅС‹Р№)
+  // Используем новый аватар из превью или сохраненный в профиле
+  // Data URL может быть как из customAvatarDataUrl (новый, еще не сохраненный), так и из userData.profileImage (Сѓже сохраненный)
   const avatarUrl = customAvatarDataUrl || userData?.profileImage || null;
 
   return (
@@ -240,13 +240,13 @@ function Profile({ onNavigate }) {
             className={`tab ${activeTab === 'profile' ? 'active' : ''}`}
             onClick={() => setActiveTab('profile')}
           >
-            РџСЂРѕС„РёР»СЊ
+            Профиль
           </div>
           <div 
             className={`tab ${activeTab === 'favorites' ? 'active' : ''}`}
             onClick={() => setActiveTab('favorites')}
           >
-            РР·Р±СЂР°РЅРЅРѕРµ
+            Избранное
           </div>
         </div>
 
@@ -283,41 +283,41 @@ function Profile({ onNavigate }) {
               />
             </div>
 
-            <h2 className="username">{userData?.name || 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ'}</h2>
+            <h2 className="username">{userData?.name || 'Пользователь'}</h2>
 
             {!editing ? (
               <div className="profile-info">
                 <div className="info-item">
-                  <label>РРјСЏ:</label>
-                  <span>{userData?.name || 'РќРµ СѓРєР°Р·Р°РЅРѕ'}</span>
+                  <label>Имя:</label>
+                  <span>{userData?.name || 'Не указано'}</span>
                 </div>
                 <div className="info-item">
-                  <label>Р›РѕРіРёРЅ:</label>
-                  <span>{userData?.username || 'РќРµ СѓРєР°Р·Р°РЅРѕ'}</span>
+                  <label>Логин:</label>
+                  <span>{userData?.username || 'Не указано'}</span>
                 </div>
                 <div className="info-item">
                   <label>Email:</label>
-                  <span>{userData?.email || 'РќРµ СѓРєР°Р·Р°РЅРѕ'}</span>
+                  <span>{userData?.email || 'Не указано'}</span>
                 </div>
               </div>
             ) : (
               <div className="profile-form">
                 <div className="form-field">
-                  <label>РРјСЏ:</label>
+                  <label>Имя:</label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Р’РІРµРґРёС‚Рµ РёРјСЏ"
+                    placeholder="Введите имя"
                   />
                 </div>
                 <div className="form-field">
-                  <label>Р›РѕРіРёРЅ:</label>
+                  <label>Логин:</label>
                   <input
                     type="text"
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    placeholder="Р’РІРµРґРёС‚Рµ Р»РѕРіРёРЅ"
+                    placeholder="Введите логин"
                   />
                 </div>
                 <div className="form-field">
@@ -326,7 +326,7 @@ function Profile({ onNavigate }) {
                     type="email"
                     value={formData.email}
                     disabled
-                    placeholder="Email РЅРµР»СЊР·СЏ РёР·РјРµРЅРёС‚СЊ"
+                    placeholder="Email нельзя изменить"
                   />
                 </div>
               </div>
@@ -344,19 +344,19 @@ function Profile({ onNavigate }) {
               {!editing ? (
                 <>
                   <button className="edit-button" onClick={handleEdit} disabled={loading}>
-                    Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ РїСЂРѕС„РёР»СЊ
+                    Редактировать профиль
                   </button>
                   <button className="logout-button" onClick={handleLogout} disabled={loading}>
-                    Р’С‹Р№С‚Рё
+                    Выйти
                   </button>
                 </>
               ) : (
                 <>
                   <button className="save-button" onClick={handleSave} disabled={loading}>
-                    {loading ? 'РЎРѕС…СЂР°РЅРµРЅРёРµ...' : 'РЎРѕС…СЂР°РЅРёС‚СЊ'}
+                    {loading ? 'Сохранение...' : 'Сохранить'}
                   </button>
                   <button className="cancel-button" onClick={handleCancel} disabled={loading}>
-                    РћС‚РјРµРЅР°
+                    Отмена
                   </button>
                 </>
               )}
@@ -366,13 +366,13 @@ function Profile({ onNavigate }) {
 
         {activeTab === 'favorites' && (
           <div className="favorites-content">
-            <h2 className="favorites-title">РР·Р±СЂР°РЅРЅС‹Рµ С„РёР»СЊРјС‹</h2>
+            <h2 className="favorites-title">Избранные фильмы</h2>
             {loadingFavorites ? (
-              <div className="loading-message">Р—Р°РіСЂСѓР·РєР°...</div>
+              <div className="loading-message">Загрузка...</div>
             ) : favoritesMovies.length === 0 ? (
               <div className="empty-favorites">
-                <p>РЈ РІР°СЃ РїРѕРєР° РЅРµС‚ РёР·Р±СЂР°РЅРЅС‹С… С„РёР»СЊРјРѕРІ</p>
-                <p className="hint">РќР°Р¶РјРёС‚Рµ РЅР° РїР»СЋСЃРёРє РЅР° РєР°СЂС‚РѕС‡РєРµ С„РёР»СЊРјР°, С‡С‚РѕР±С‹ РґРѕР±Р°РІРёС‚СЊ РµРіРѕ РІ РёР·Р±СЂР°РЅРЅРѕРµ</p>
+                <p>РЈ вас пока нет избранных фильмов</p>
+                <p className="hint">Нажмите на плюсик на карточке фильма, чтобы добавить его в избранное</p>
               </div>
             ) : (
               <div className="favorites-grid">
@@ -391,7 +391,7 @@ function Profile({ onNavigate }) {
                     <div className="favorite-movie-info">
                       <p className="favorite-movie-title">{movie.title}</p>
                       <span className="favorite-movie-year">
-                        {movie.releaseYear || 'Р“РѕРґ РЅРµ СѓРєР°Р·Р°РЅ'}
+                        {movie.releaseYear || 'Год не указан'}
                       </span>
                     </div>
                   </div>

@@ -1,6 +1,5 @@
 ﻿import { useMemo, useState } from 'react';
 import './Movies.scss';
-import Header from '../../Components/Header/Header';
 import Footer from '../../Components/Footer/Footer';
 import Movie from '../../Components/Movie/Movie';
 import { useMovies } from '../../hooks/useMovies';
@@ -8,22 +7,22 @@ import { POSTER_PLACEHOLDER } from '../../constants/placeholders';
 import { getCurrentUser } from '../../Backend/authService';
 import { addToFavorites } from '../../Backend/favoritesService';
 
-// РњР°РїРїРёРЅРі СЂСѓСЃСЃРєРёС… РЅР°Р·РІР°РЅРёР№ Р¶Р°РЅСЂРѕРІ РЅР° Р°РЅРіР»РёР№СЃРєРёРµ
+// Маппинг русских названий жанров на английские
 const genreMapping = {
-  'Р”СЂР°РјР°': ['Р”СЂР°РјР°', 'Drama', 'РґСЂР°РјР°'],
-  'Р‘РѕРµРІРёРє': ['Р‘РѕРµРІРёРє', 'Action', 'Р­РєС€РЅ', 'Р±РѕРµРІРёРє', 'action', 'СЌРєС€РЅ'],
-  'РСЃР»РµРґРѕРІР°РЅРёСЏ': ['РСЃР»РµРґРѕРІР°РЅРёСЏ', 'Research', 'РёСЃСЃР»РµРґРѕРІР°РЅРёСЏ'],
-  'Р РѕРјР°РЅ': ['Р РѕРјР°РЅ', 'Romance', 'Р РѕРјР°РЅС‚РёРєР°', 'СЂРѕРјР°РЅ', 'romance', 'СЂРѕРјР°РЅС‚РёРєР°'],
-  'Р¤Р°РЅС‚Р°СЃС‚РёРєР°': ['Р¤Р°РЅС‚Р°СЃС‚РёРєР°', 'Fantasy', 'Sci-Fi', 'Science Fiction', 'С„Р°РЅС‚Р°СЃС‚РёРєР°', 'fantasy'],
-  'РљРѕРјРµРґРёСЏ': ['РљРѕРјРµРґРёСЏ', 'Comedy', 'РєРѕРјРµРґРёСЏ', 'comedy'],
-  'РђРЅРёРјР°С†РёСЏ': ['РђРЅРёРјР°С†РёСЏ', 'Animation', 'Р°РЅРёРјР°С†РёСЏ', 'animation'],
-  'РўСЂРёР»Р»РµСЂ': ['РўСЂРёР»Р»РµСЂ', 'Thriller', 'С‚СЂРёР»Р»РµСЂ', 'thriller'],
-  'РњРёСЃС‚РёС‡РµСЃРєРѕРµ': ['РњРёСЃС‚РёС‡РµСЃРєРѕРµ', 'Mystery', 'РњРёСЃС‚РёРєР°', 'РјРёСЃС‚РёС‡РµСЃРєРѕРµ', 'mystery', 'РјРёСЃС‚РёРєР°'],
-  'РСЃС‚РѕСЂРёС‡РµСЃРєРѕРµ': ['РСЃС‚РѕСЂРёС‡РµСЃРєРѕРµ', 'History', 'РСЃС‚РѕСЂРёС‡РµСЃРєРёР№', 'РёСЃС‚РѕСЂРёС‡РµСЃРєРѕРµ', 'history', 'РёСЃС‚РѕСЂРёС‡РµСЃРєРёР№']
+  'Драма': ['Драма', 'Drama', 'драма'],
+  'Боевик': ['Боевик', 'Action', 'Экшн', 'боевик', 'action', 'экшн'],
+  'Исследования': ['Исследования', 'Research', 'исследования'],
+  'Роман': ['Роман', 'Romance', 'Романтика', 'роман', 'romance', 'романтика'],
+  'Фантастика': ['Фантастика', 'Fantasy', 'Sci-Fi', 'Science Fiction', 'фантастика', 'fantasy'],
+  'Комедия': ['Комедия', 'Comedy', 'комедия', 'comedy'],
+  'Анимация': ['Анимация', 'Animation', 'анимация', 'animation'],
+  'Триллер': ['Триллер', 'Thriller', 'триллер', 'thriller'],
+  'Мистическое': ['Мистическое', 'Mystery', 'Мистика', 'мистическое', 'mystery', 'мистика'],
+  'Историческое': ['Историческое', 'History', 'Исторический', 'историческое', 'history', 'исторический']
 };
 
 function Movies({ onNavigate }) {
-  const [selectedGenres, setSelectedGenres] = useState(['Р”СЂР°РјР°', 'Р‘РѕРµРІРёРє', 'Р¤Р°РЅС‚Р°СЃС‚РёРєР°', 'РўСЂРёР»Р»РµСЂ']);
+  const [selectedGenres, setSelectedGenres] = useState(['Драма', 'Боевик', 'Фантастика', 'Триллер']);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('');
@@ -32,12 +31,12 @@ function Movies({ onNavigate }) {
   const { movies, loading: moviesLoading, error: moviesError } = useMovies();
 
   const genres = [
-    'Р”СЂР°РјР°', 'Р‘РѕРµРІРёРє', 'РСЃР»РµРґРѕРІР°РЅРёСЏ', 'Р РѕРјР°РЅ', 
-    'Р¤Р°РЅС‚Р°СЃС‚РёРєР°', 'РљРѕРјРµРґРёСЏ', 'РђРЅРёРјР°С†РёСЏ', 'РўСЂРёР»Р»РµСЂ', 
-    'РњРёСЃС‚РёС‡РµСЃРєРѕРµ', 'РСЃС‚РѕСЂРёС‡РµСЃРєРѕРµ'
+    'Драма', 'Боевик', 'Иследования', 'Роман', 
+    'Фантастика', 'Комедия', 'Анимация', 'Триллер', 
+    'Мистическое', 'Историческое'
   ];
 
-  // Р“РµРЅРµСЂРёСЂСѓРµРј СЃРїРёСЃРѕРє РіРѕРґРѕРІ (РѕС‚ С‚РµРєСѓС‰РµРіРѕ РґРѕ 1900)
+  // Генерируем список годов (от текущего до 1900)
   const years = useMemo(() => {
     const currentYear = new Date().getFullYear();
     return Array.from({ length: currentYear - 1899 }, (_, i) => currentYear - i);
@@ -52,7 +51,7 @@ function Movies({ onNavigate }) {
   const filteredMovies = useMemo(() => {
     let result = movies;
 
-    // Р¤РёР»СЊС‚СЂР°С†РёСЏ РїРѕ РїРѕРёСЃРєРѕРІРѕРјСѓ Р·Р°РїСЂРѕСЃСѓ (РЅР°Р·РІР°РЅРёРµ)
+    // Фильтрация по поисковому запросу (название)
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       result = result.filter((movie) => {
@@ -62,7 +61,7 @@ function Movies({ onNavigate }) {
       });
     }
 
-    // Р¤РёР»СЊС‚СЂР°С†РёСЏ РїРѕ Р¶Р°РЅСЂР°Рј
+    // Фильтрация по жанрам
     if (selectedGenres.length > 0) {
       result = result.filter((movie) => {
         if (!movie.genres || movie.genres.length === 0) return false;
@@ -78,7 +77,7 @@ function Movies({ onNavigate }) {
       });
     }
 
-    // Р¤РёР»СЊС‚СЂР°С†РёСЏ РїРѕ РіРѕРґСѓ
+    // Фильтрация по году
     if (selectedYear) {
       const year = parseInt(selectedYear);
       result = result.filter((movie) => {
@@ -87,7 +86,7 @@ function Movies({ onNavigate }) {
       });
     }
 
-    // Р¤РёР»СЊС‚СЂР°С†РёСЏ РїРѕ СЂРµР¶РёСЃСЃРµСЂСѓ
+    // Фильтрация по режиссеру
     if (selectedDirector.trim()) {
       const directorQuery = selectedDirector.toLowerCase().trim();
       result = result.filter((movie) => {
@@ -96,7 +95,7 @@ function Movies({ onNavigate }) {
       });
     }
 
-    // Р¤РёР»СЊС‚СЂР°С†РёСЏ РїРѕ Р°РєС‚РµСЂСѓ
+    // Фильтрация по актеру
     if (selectedActor.trim()) {
       const actorQuery = selectedActor.toLowerCase().trim();
       result = result.filter((movie) => {
@@ -118,7 +117,7 @@ function Movies({ onNavigate }) {
   const handleAddToFavorites = async (movieId) => {
     const user = getCurrentUser();
     if (!user) {
-      // Р•СЃР»Рё РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ, РїРµСЂРµРЅР°РїСЂР°РІР»СЏРµРј РЅР° СЃС‚СЂР°РЅРёС†Сѓ РІС…РѕРґР°
+      // Если пользователь не авторизован, перенаправляем на страницу входа
       if (onNavigate) {
         onNavigate('login');
       }
@@ -128,24 +127,24 @@ function Movies({ onNavigate }) {
     try {
       const result = await addToFavorites(user.uid, movieId);
       if (result.success) {
-        // РњРѕР¶РЅРѕ РїРѕРєР°Р·Р°С‚СЊ СѓРІРµРґРѕРјР»РµРЅРёРµ РѕР± СѓСЃРїРµС…Рµ
-        console.log('Р¤РёР»СЊРј РґРѕР±Р°РІР»РµРЅ РІ РёР·Р±СЂР°РЅРЅРѕРµ');
+        // Можно показать уведомление об успехе
+        console.log('Фильм добавлен в избранное');
       } else {
-        console.error('РћС€РёР±РєР° РґРѕР±Р°РІР»РµРЅРёСЏ РІ РёР·Р±СЂР°РЅРЅРѕРµ:', result.error);
+        console.error('Ошибка добавления в избранное:', result.error);
       }
     } catch (error) {
-      console.error('РћС€РёР±РєР° РґРѕР±Р°РІР»РµРЅРёСЏ РІ РёР·Р±СЂР°РЅРЅРѕРµ:', error);
+      console.error('Ошибка добавления в избранное:', error);
     }
   };
 
   const renderMovies = () => {
     if (moviesError) {
-      return <div className="movies-status error">РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ С„РёР»СЊРјС‹. РџРѕРїСЂРѕР±СѓР№С‚Рµ РїРѕР·Р¶Рµ.</div>;
+      return <div className="movies-status error">Не удалось загрузить фильмы. Попробуйте позже.</div>;
     }
 
     if (moviesLoading) {
       return Array.from({ length: 12 }).map((_, index) => (
-        <Movie key={`movies-skeleton-${index}`} image={POSTER_PLACEHOLDER} alt="Р—Р°РіСЂСѓР·РєР° С„РёР»СЊРјРѕРІ" />
+        <Movie key={`movies-skeleton-${index}`} image={POSTER_PLACEHOLDER} alt="Загрузка фильмов" />
       ));
     }
 
@@ -154,8 +153,8 @@ function Movies({ onNavigate }) {
       return (
         <div className="movies-status">
           {hasFilters 
-            ? 'РџРѕ РІР°С€РµРјСѓ Р·Р°РїСЂРѕСЃСѓ РЅРёС‡РµРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ. РџРѕРїСЂРѕР±СѓР№С‚Рµ РёР·РјРµРЅРёС‚СЊ РєСЂРёС‚РµСЂРёРё РїРѕРёСЃРєР°.' 
-            : 'Р”РѕР±Р°РІСЊС‚Рµ С„РёР»СЊРјС‹ РІ РєРѕР»Р»РµРєС†РёСЋ Firestore, С‡С‚РѕР±С‹ СѓРІРёРґРµС‚СЊ РёС… Р·РґРµСЃСЊ.'}
+            ? 'По вашему запросу ничего не найдено. Попробуйте изменить критерии поиска.' 
+            : 'Добавьте фильмы в коллекцию Firestore, чтобы увидеть их здесь.'}
         </div>
       );
     }
@@ -166,7 +165,7 @@ function Movies({ onNavigate }) {
         image={movie.posterUrl || POSTER_PLACEHOLDER}
         alt={movie.title}
         title={movie.title}
-        subtitle={[movie.releaseYear, movie.genres?.[0]].filter(Boolean).join(' вЂў ')}
+        subtitle={[movie.releaseYear, movie.genres?.[0]].filter(Boolean).join(' • ')}
         onClick={() => openMovie(movie.id)}
         onAddToFavorites={handleAddToFavorites}
         movieId={movie.id}
@@ -177,7 +176,6 @@ function Movies({ onNavigate }) {
   return (
     <div className="movies-page">
       <div className="page-background"></div>
-      <Header onNavigate={onNavigate} />
       
       <main className="movies-content">
         <div className="movies-container">
@@ -186,7 +184,7 @@ function Movies({ onNavigate }) {
               <svg className="title-decoration" width="290" height="110" viewBox="0 0 290 110" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M17.4227 15.4163C32.8806 -6.61609 242.763 -3.60644 275.466 15.4163C301.926 30.8084 285.566 82.9256 278.357 102.259C276.689 106.734 272.377 109.556 267.602 109.556H18.8207C17.8919 109.556 16.9276 109.692 16.0093 109.831C-12.0157 114.079 2.21436 37.0931 17.4227 15.4163Z" fill="#228EE5"/>
               </svg>
-              <h1 className="search-title">Р Р°СЃС€РёСЂРµРЅРЅС‹Р№ РїРѕРёСЃРє</h1>
+              <h1 className="search-title">Расширенный поиск</h1>
             </div>
 
             <div className="search-card">
@@ -199,7 +197,7 @@ function Movies({ onNavigate }) {
               <div className="search-filters">
                 <div className="filter-row">
                   <div className="filter-group">
-                    <label className="filter-label">Р“РѕРґ</label>
+                    <label className="filter-label">Год</label>
                     <select 
                       className="filter-select"
                       value={selectedYear}
@@ -207,7 +205,7 @@ function Movies({ onNavigate }) {
                       style={{ 
                         background: 'transparent', 
                         border: 'none', 
-                        color: 'var(--color-text-primary)', 
+                        color: '#EBFAFF',
                         fontSize: '14px',
                         cursor: 'pointer',
                         appearance: 'none',
@@ -215,9 +213,16 @@ function Movies({ onNavigate }) {
                         padding: '8px 30px 8px 12px'
                       }}
                     >
-                      <option value="">Р’СЃРµ РіРѕРґС‹</option>
+                      <option value="">Все годы</option>
                       {years.map(year => (
-                        <option key={year} value={year} style={{ background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)' }}>
+                        <option
+                          key={year}
+                          value={year}
+                          style={{
+                            background: 'var(--color-bg-primary)',
+                            color: '#EBFAFF'
+                          }}
+                        >
                           {year}
                         </option>
                       ))}
@@ -225,11 +230,11 @@ function Movies({ onNavigate }) {
                   </div>
 
                   <div className="filter-group">
-                    <label className="filter-label">РЎС‚СЂР°РЅР°</label>
+                    <label className="filter-label">Страна</label>
                     <input
                       type="text"
                       className="filter-input"
-                      placeholder="Р’РІРµРґРёС‚Рµ СЃС‚СЂР°РЅСѓ"
+                      placeholder="Введите страну"
                       value={selectedCountry}
                       onChange={(e) => setSelectedCountry(e.target.value)}
                       style={{
@@ -244,11 +249,11 @@ function Movies({ onNavigate }) {
                   </div>
 
                   <div className="filter-group">
-                    <label className="filter-label">РђРєС‚С‘СЂ</label>
+                    <label className="filter-label">Актёр</label>
                     <input
                       type="text"
                       className="filter-input"
-                      placeholder="Р’РІРµРґРёС‚Рµ РёРјСЏ Р°РєС‚С‘СЂР°"
+                      placeholder="Введите имя актёра"
                       value={selectedActor}
                       onChange={(e) => setSelectedActor(e.target.value)}
                       style={{
@@ -267,7 +272,7 @@ function Movies({ onNavigate }) {
                   <input 
                     type="text" 
                     className="search-input" 
-                    placeholder="РџРѕРёСЃРє РїРѕ РЅР°Р·РІР°РЅРёСЋ"
+                    placeholder="Поиск по названию"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -277,11 +282,11 @@ function Movies({ onNavigate }) {
                 </div>
 
                 <div className="filter-group director-filter">
-                  <label className="filter-label">РљРёРЅРѕСЂРµР¶РёСЃС‘СЂ</label>
+                  <label className="filter-label">Кинорежисёр</label>
                   <input
                     type="text"
                     className="filter-input"
-                    placeholder="Р’РІРµРґРёС‚Рµ РёРјСЏ СЂРµР¶РёСЃСЃС‘СЂР°"
+                    placeholder="Введите имя режиссёра"
                     value={selectedDirector}
                     onChange={(e) => setSelectedDirector(e.target.value)}
                     style={{
@@ -311,7 +316,7 @@ function Movies({ onNavigate }) {
           </div>
 
           <section className="movies-grid-section">
-            <h2 className="movies-title">Р¤РёР»СЊРјС‹</h2>
+            <h2 className="movies-title">Фильмы</h2>
             
             <div className="movies-grid">
               {renderMovies()}

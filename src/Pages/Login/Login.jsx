@@ -12,7 +12,7 @@ function Login({ onNavigate }) {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      setError('Р—Р°РїРѕР»РЅРёС‚Рµ РІСЃРµ РїРѕР»СЏ');
+      setError('Заполните все поля');
       return;
     }
 
@@ -23,16 +23,16 @@ function Login({ onNavigate }) {
       const result = await loginUser(email, password);
 
       if (result.success) {
-        // РЈСЃРїРµС€РЅС‹Р№ РІС…РѕРґ - РїРµСЂРµС…РѕРґРёРј РЅР° СЃС‚СЂР°РЅРёС†Сѓ РїСЂРѕС„РёР»СЏ
+        // Успешный вход - переходим на страницу профиля
         if (onNavigate) {
           onNavigate('profile');
         }
       } else {
-        setError(result.error || 'РћС€РёР±РєР° РїСЂРё РІС…РѕРґРµ');
+        setError(result.error || 'Ошибка при входе');
       }
     } catch (err) {
-      setError('РџСЂРѕРёР·РѕС€Р»Р° РѕС€РёР±РєР°. РџРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰Рµ СЂР°Р·');
-      console.error('РћС€РёР±РєР° РІС…РѕРґР°:', err);
+      setError('Произошла ошибка. Попробуйте еще раз');
+      console.error('Ошибка входа:', err);
     } finally {
       setLoading(false);
     }
@@ -63,13 +63,13 @@ function Login({ onNavigate }) {
               className={`tab ${activeTab === 'login' ? 'active' : ''}`}
               onClick={() => setActiveTab('login')}
             >
-              Р’С…РѕРґ
+              Вход
             </div>
             <div
               className={`tab ${activeTab === 'register' ? 'active' : ''}`}
               onClick={() => onNavigate('signup')}
             >
-              Р РµРіРёСЃС‚СЂР°С†РёСЏ
+              Регистрация
             </div>
           </div>
 
@@ -95,7 +95,7 @@ function Login({ onNavigate }) {
             <div className="input-field">
               <input 
                 type={showPassword ? "text" : "password"}
-                placeholder="РџР°СЂРѕР»СЊ"
+                placeholder="Пароль"
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
@@ -121,7 +121,7 @@ function Login({ onNavigate }) {
           </div>
 
           <div className="forgot-password">
-            Р—Р°Р±С‹Р»Рё РїР°СЂРѕР»СЊ?
+            Забыли пароль?
           </div>
 
           {error && (
@@ -141,7 +141,7 @@ function Login({ onNavigate }) {
             onClick={handleLogin}
             disabled={loading}
           >
-            {loading ? 'Р’С…РѕРґ...' : 'Р’С…РѕРґ'}
+            {loading ? 'Вход...' : 'Вход'}
           </button>
         </div>
       </div>

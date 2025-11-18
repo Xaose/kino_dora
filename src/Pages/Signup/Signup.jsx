@@ -31,36 +31,36 @@ function Signup({ onNavigate }) {
 
   const handleInputChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
-    setError(''); // РћС‡РёС‰Р°РµРј РѕС€РёР±РєСѓ РїСЂРё РёР·РјРµРЅРµРЅРёРё РїРѕР»СЏ
+    setError(''); // Очищаем ошибку при изменении поля
   };
 
   const validateStep1 = () => {
     if (!formData.name.trim()) {
-      setError('Р’РІРµРґРёС‚Рµ РёРјСЏ');
+      setError('Введите имя');
       return false;
     }
     if (!formData.email.trim()) {
-      setError('Р’РІРµРґРёС‚Рµ email');
+      setError('Введите email');
       return false;
     }
     if (!formData.email.includes('@')) {
-      setError('Р’РІРµРґРёС‚Рµ РєРѕСЂСЂРµРєС‚РЅС‹Р№ email');
+      setError('Введите корректный email');
       return false;
     }
     if (!formData.password) {
-      setError('Р’РІРµРґРёС‚Рµ РїР°СЂРѕР»СЊ');
+      setError('Введите пароль');
       return false;
     }
     if (formData.password.length < 6) {
-      setError('РџР°СЂРѕР»СЊ РґРѕР»Р¶РµРЅ СЃРѕРґРµСЂР¶Р°С‚СЊ РјРёРЅРёРјСѓРј 6 СЃРёРјРІРѕР»РѕРІ');
+      setError('Пароль должен содержать минимум 6 символов');
       return false;
     }
     if (formData.password !== formData.repeatPassword) {
-      setError('РџР°СЂРѕР»Рё РЅРµ СЃРѕРІРїР°РґР°СЋС‚');
+      setError('Пароли не совпадают');
       return false;
     }
     if (!formData.username.trim()) {
-      setError('Р’РІРµРґРёС‚Рµ Р»РѕРіРёРЅ');
+      setError('Введите логин');
       return false;
     }
     return true;
@@ -73,7 +73,7 @@ function Signup({ onNavigate }) {
         setStep(2);
       }
     } else if (step === 2) {
-      // Р РµРіРёСЃС‚СЂР°С†РёСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+      // Регистрация пользователя
       await handleRegister();
     }
   };
@@ -82,20 +82,20 @@ function Signup({ onNavigate }) {
     const file = e.target.files[0];
     if (file) {
       if (!file.type.startsWith('image/')) {
-        setError('Р’С‹Р±РµСЂРёС‚Рµ С„Р°Р№Р» РёР·РѕР±СЂР°Р¶РµРЅРёСЏ');
+        setError('Выберите файл изображения');
         return;
       }
       
-      // РџСЂРѕРІРµСЂСЏРµРј СЂР°Р·РјРµСЂ С„Р°Р№Р»Р° (РјР°РєСЃРёРјСѓРј 5MB)
+      // Проверяем размер файла (максимум 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        setError('Р Р°Р·РјРµСЂ С„Р°Р№Р»Р° РЅРµ РґРѕР»Р¶РµРЅ РїСЂРµРІС‹С€Р°С‚СЊ 5MB');
+        setError('Размер файла не должен превышать 5MB');
         return;
       }
 
       setCustomAvatarFile(file);
-      setSelectedProfile(9); // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј РІС‹Р±СЂР°РЅРЅС‹Рј РїРѕСЃР»РµРґРЅРёР№ РєСЂСѓР¶РѕРє
+      setSelectedProfile(9); // Устанавливаем выбранным последний кружок
       
-      // РЎРѕР·РґР°РµРј РїСЂРµРІСЊСЋ
+      // Создаем превью
       const reader = new FileReader();
       reader.onloadend = () => {
         setCustomAvatarPreview(reader.result);
@@ -107,7 +107,7 @@ function Signup({ onNavigate }) {
 
   const handleProfileSelect = (index) => {
     if (index === 9) {
-      // РћС‚РєСЂС‹РІР°РµРј РїСЂРѕРІРѕРґРЅРёРє РґР»СЏ РІС‹Р±РѕСЂР° С„Р°Р№Р»Р°
+      // Открываем проводник для выбора файла
       if (fileInputRef.current) {
         fileInputRef.current.click();
       }
@@ -125,12 +125,12 @@ function Signup({ onNavigate }) {
     try {
       let profileImage = null;
 
-      // Р•СЃР»Рё РІС‹Р±СЂР°РЅ РіРѕС‚РѕРІС‹Р№ Р°РІР°С‚Р°СЂ
+      // Если выбран готовый аватар
       if (selectedProfile !== null && selectedProfile !== 9) {
         profileImage = profileImages[selectedProfile];
       }
 
-      // Р РµРіРёСЃС‚СЂРёСЂСѓРµРј РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+      // Регистрируем пользователя
       const result = await registerUser(
         formData.email,
         formData.password,
@@ -142,43 +142,43 @@ function Signup({ onNavigate }) {
       );
 
       if (result.success) {
-        // Р•СЃР»Рё РІС‹Р±СЂР°РЅ РєР°СЃС‚РѕРјРЅС‹Р№ Р°РІР°С‚Р°СЂ, Р·Р°РіСЂСѓР¶Р°РµРј РµРіРѕ РІ Storage
+        // Если выбран кастомный аватар, загружаем его в Storage
         if (customAvatarFile && result.user) {
           try {
             const avatarUrl = await uploadUserAvatar(
               customAvatarFile, 
               result.user.uid,
               (progress) => {
-                console.log(`Р—Р°РіСЂСѓР·РєР° Р°РІР°С‚Р°СЂР°: ${progress.toFixed(0)}%`);
+                console.log(`Загрузка аватара: ${progress.toFixed(0)}%`);
               }
             );
             
-            // РћР±РЅРѕРІР»СЏРµРј РїСЂРѕС„РёР»СЊ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ СЃ URL Р°РІР°С‚Р°СЂР° С‡РµСЂРµР· authService
+            // Обновляем профиль пользователя с URL аватара через authService
             const { updateUserProfile } = await import('../../Backend/authService');
             if (updateUserProfile) {
               await updateUserProfile(result.user.uid, { profileImage: avatarUrl });
             }
             
-            console.log('РђРІР°С‚Р°СЂ Р·Р°РіСЂСѓР¶РµРЅ Рё СЃРѕС…СЂР°РЅРµРЅ:', avatarUrl);
+            console.log('Аватар загружен и сохранен:', avatarUrl);
           } catch (uploadError) {
-            console.error('РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё Р°РІР°С‚Р°СЂР°:', uploadError);
-            // РќРµ Р±Р»РѕРєРёСЂСѓРµРј СЂРµРіРёСЃС‚СЂР°С†РёСЋ, РµСЃР»Рё Р°РІР°С‚Р°СЂ РЅРµ Р·Р°РіСЂСѓР·РёР»СЃСЏ
+            console.error('Ошибка загрузки аватара:', uploadError);
+            // Не блокируем регистрацию, если аватар не загрузился
           }
         }
 
         setStep(3);
-        // Р§РµСЂРµР· 2 СЃРµРєСѓРЅРґС‹ РїРµСЂРµС…РѕРґРёРј РЅР° СЃС‚СЂР°РЅРёС†Сѓ РїСЂРѕС„РёР»СЏ
+        // Через 2 секунды переходим на страницу профиля
         setTimeout(() => {
           if (onNavigate) {
             onNavigate('profile');
           }
         }, 2000);
       } else {
-        setError(result.error || 'РћС€РёР±РєР° РїСЂРё СЂРµРіРёСЃС‚СЂР°С†РёРё');
+        setError(result.error || 'Ошибка при регистрации');
       }
     } catch (err) {
-      setError('РџСЂРѕРёР·РѕС€Р»Р° РѕС€РёР±РєР°. РџРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰Рµ СЂР°Р·');
-      console.error('РћС€РёР±РєР° СЂРµРіРёСЃС‚СЂР°С†РёРё:', err);
+      setError('Произошла ошибка. Попробуйте еще раз');
+      console.error('Ошибка регистрации:', err);
     } finally {
       setLoading(false);
     }
@@ -214,10 +214,10 @@ function Signup({ onNavigate }) {
 
               <div className="tab-switcher">
                 <div className="tab" onClick={() => onNavigate('login')}>
-                  Р’С…РѕРґ
+                  Вход
                 </div>
                 <div className="tab active">
-                  Р РµРіРµСЃС‚СЂР°С†РёСЏ
+                  Регестрация
                 </div>
               </div>
 
@@ -227,7 +227,7 @@ function Signup({ onNavigate }) {
                 <div className="input-field">
                   <input 
                     type="text" 
-                    placeholder="РРјСЏ"
+                    placeholder="Имя"
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
                   />
@@ -245,7 +245,7 @@ function Signup({ onNavigate }) {
                 <div className="input-field">
                   <input 
                     type="password" 
-                    placeholder="РџР°СЂРѕР»СЊ"
+                    placeholder="Пароль"
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
                   />
@@ -254,7 +254,7 @@ function Signup({ onNavigate }) {
                 <div className="input-field">
                   <input 
                     type="password" 
-                    placeholder="РџРѕРІС‚РѕСЂРёС‚Рµ РїР°СЂРѕР»СЊ"
+                    placeholder="Повторите пароль"
                     value={formData.repeatPassword}
                     onChange={(e) => handleInputChange('repeatPassword', e.target.value)}
                   />
@@ -265,7 +265,7 @@ function Signup({ onNavigate }) {
                 <div className="input-field">
                   <input 
                     type="text" 
-                    placeholder="Р›РѕРіРёРЅ"
+                    placeholder="Логин"
                     value={formData.username}
                     onChange={(e) => handleInputChange('username', e.target.value)}
                   />
@@ -292,7 +292,7 @@ function Signup({ onNavigate }) {
                 onClick={handleContinue}
                 disabled={loading}
               >
-                {loading ? 'Р—Р°РіСЂСѓР·РєР°...' : 'РџСЂРѕРґРѕР»Р¶РёС‚СЊ'}
+                {loading ? 'Загрузка...' : 'Продолжить'}
               </button>
             </div>
           </div>
@@ -300,7 +300,7 @@ function Signup({ onNavigate }) {
 
         {step === 2 && (
           <div className="signup-step-2">
-            <h1 className="greeting-title">Р—РґСЂР°РІСЃС‚РІСѓР№С‚Рµ {formData.name || 'Sasha'}</h1>
+            <h1 className="greeting-title">Здравствуйте {formData.name || 'Sasha'}</h1>
 
             <div className="user-avatar-large">
               {customAvatarPreview ? (
@@ -316,9 +316,9 @@ function Signup({ onNavigate }) {
             </div>
 
             <div className="profile-section">
-              <h2 className="profile-title">Р’С‹Р±РµСЂРёС‚Рµ СЃРІРѕР№ РїСЂРѕС„РёР»СЊ</h2>
+              <h2 className="profile-title">Выберите свой профиль</h2>
 
-              {/* РЎРєСЂС‹С‚С‹Р№ input РґР»СЏ РІС‹Р±РѕСЂР° С„Р°Р№Р»Р° */}
+              {/* Скрытый input для выбора файла */}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -380,7 +380,7 @@ function Signup({ onNavigate }) {
                 onClick={handleContinue}
                 disabled={loading}
               >
-                {loading ? 'Р РµРіРёСЃС‚СЂР°С†РёСЏ...' : 'Р—Р°РІРµСЂС€РёС‚СЊ СЂРµРіРёСЃС‚СЂР°С†РёСЋ'}
+                {loading ? 'Регистрация...' : 'Завершить регистрацию'}
               </button>
             </div>
           </div>
@@ -394,7 +394,7 @@ function Signup({ onNavigate }) {
 
             <div className="success-name">{formData.name || 'Sasha'}</div>
 
-            <h1 className="success-message">Р’Р°С€ Р°РєРєР°СѓРЅС‚ Р±С‹Р» СѓСЃРїРµС€РЅРѕ СЃРѕР·РґР°РЅ</h1>
+            <h1 className="success-message">Ваш аккаунт был успешно создан</h1>
           </div>
         )}
       </div>

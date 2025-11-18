@@ -2,7 +2,7 @@
 
 function Series({ image, alt, title, subtitle, onClick, onAddToFavorites, doramaId }) {
   const handleAddClick = (e) => {
-    e.stopPropagation(); // РћСЃС‚Р°РЅР°РІР»РёРІР°РµРј РІСЃРїР»С‹С‚РёРµ СЃРѕР±С‹С‚РёСЏ
+    e.stopPropagation(); // Останавливаем всплытие события
     if (onAddToFavorites && doramaId) {
       onAddToFavorites(doramaId);
     }

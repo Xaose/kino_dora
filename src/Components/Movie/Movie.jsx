@@ -2,7 +2,7 @@
 
 function Movie({ image, alt, title, subtitle, onClick, onAddToFavorites, movieId }) {
   const handleAddClick = (e) => {
-    e.stopPropagation(); // РћСЃС‚Р°РЅР°РІР»РёРІР°РµРј РІСЃРїР»С‹С‚РёРµ СЃРѕР±С‹С‚РёСЏ
+    e.stopPropagation(); // Останавливаем всплытие события
     if (onAddToFavorites && movieId) {
       onAddToFavorites(movieId);
     }

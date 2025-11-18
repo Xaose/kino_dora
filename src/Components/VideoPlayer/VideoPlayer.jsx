@@ -1,7 +1,7 @@
 ﻿import { useState, useRef, useEffect } from 'react';
 import './VideoPlayer.css';
 
-// Р¤СѓРЅРєС†РёСЏ РґР»СЏ РѕРїСЂРµРґРµР»РµРЅРёСЏ YouTube URL Рё РёР·РІР»РµС‡РµРЅРёСЏ video ID
+// Функция для определения YouTube URL и извлечения video ID
 const getYouTubeVideoId = (url) => {
   if (!url) return null;
   
@@ -20,7 +20,7 @@ const getYouTubeVideoId = (url) => {
   return null;
 };
 
-// Р¤СѓРЅРєС†РёСЏ РґР»СЏ РїСЂРѕРІРµСЂРєРё, СЏРІР»СЏРµС‚СЃСЏ Р»Рё URL YouTube СЃСЃС‹Р»РєРѕР№
+// Функция для проверки, является ли URL YouTube ссылкой
 const isYouTubeUrl = (url) => {
   return getYouTubeVideoId(url) !== null;
 };
@@ -48,7 +48,7 @@ function VideoPlayer({ videoUrl, title, onBack, poster }) {
     : null;
 
   useEffect(() => {
-    // РџСЂРѕРїСѓСЃРєР°РµРј РґР»СЏ YouTube РІРёРґРµРѕ (РѕРЅРё РёСЃРїРѕР»СЊР·СѓСЋС‚ iframe)
+    // Пропускаем для YouTube видео (они используют iframe)
     if (isYouTube) return;
     
     const video = videoRef.current;
@@ -182,7 +182,7 @@ function VideoPlayer({ videoUrl, title, onBack, poster }) {
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-  // Р•СЃР»Рё СЌС‚Рѕ YouTube РІРёРґРµРѕ, РёСЃРїРѕР»СЊР·СѓРµРј iframe
+  // Если это YouTube видео, используем iframe
   if (isYouTube && youtubeEmbedUrl) {
     return (
       <div 
@@ -206,7 +206,7 @@ function VideoPlayer({ videoUrl, title, onBack, poster }) {
                   <path d="M20 24L12 16L20 8" stroke="var(--color-text-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
-              <h1 className="video-title">{title || 'РќР°Р·РІР°РЅРёРµ'}</h1>
+              <h1 className="video-title">{title || 'Название'}</h1>
             </div>
           </div>
         </div>
@@ -214,7 +214,7 @@ function VideoPlayer({ videoUrl, title, onBack, poster }) {
     );
   }
 
-  // РћР±С‹С‡РЅРѕРµ РІРёРґРµРѕ
+  // Обычное видео
   return (
     <div 
       ref={playerRef}
@@ -238,7 +238,7 @@ function VideoPlayer({ videoUrl, title, onBack, poster }) {
                 <path d="M20 24L12 16L20 8" stroke="var(--color-text-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
-            <h1 className="video-title">{title || 'РќР°Р·РІР°РЅРёРµ'}</h1>
+            <h1 className="video-title">{title || 'Название'}</h1>
           </div>
           
           <div className="top-bar-right">

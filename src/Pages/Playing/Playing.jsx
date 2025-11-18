@@ -14,14 +14,14 @@ function Playing({ onNavigate, selectedMovieId }) {
   };
 
   if (loading) {
-    return <div className="playing-page movie-state">Р—Р°РіСЂСѓР¶Р°РµРј РїР»РµРµСЂ...</div>;
+    return <div className="playing-page movie-state">Загружаем плеер...</div>;
   }
 
   if (error || !movie) {
     return (
       <div className="playing-page movie-state error">
-        РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ РІРёРґРµРѕ.
-        <button onClick={handleBack}>РќР°Р·Р°Рґ</button>
+        Не удалось загрузить видео.
+        <button onClick={handleBack}>Назад</button>
       </div>
     );
   }

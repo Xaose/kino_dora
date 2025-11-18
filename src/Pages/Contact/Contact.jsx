@@ -1,20 +1,17 @@
 ﻿import './Contact.scss';
-import Header from '../../Components/Header/Header';
 import Footer from '../../Components/Footer/Footer';
 
 function Contact({ onNavigate }) {
   return (
     <div className="contact-page">
-      <Header onNavigate={onNavigate} />
-      
       <div className="contact-hero">
         <div className="contact-background-gradient"></div>
         
         <div className="contact-container">
           <div className="contact-header">
-            <h1 className="contact-title">РЎРІСЏР·Р°С‚СЊСЃСЏ СЃ РЅР°РјРё</h1>
+            <h1 className="contact-title">Связаться с нами</h1>
             <p className="contact-subtitle">
-              Р•СЃС‚СЊ РІРѕРїСЂРѕСЃС‹ РёР»Рё РїСЂРµРґР»РѕР¶РµРЅРёСЏ? РњС‹ РІСЃРµРіРґР° РіРѕС‚РѕРІС‹ РїРѕРјРѕС‡СЊ РІР°Рј СЃ Р»СЋР±С‹РјРё РІРѕРїСЂРѕСЃР°РјРё
+              Есть вопросы или предложения? Мы всегда готовы помочь вам с любыми вопросами
             </p>
           </div>
 
@@ -22,12 +19,12 @@ function Contact({ onNavigate }) {
             <div className="contact-form-wrapper">
               <form className="contact-form">
                 <div className="form-group">
-                  <label htmlFor="name" className="form-label">Р’Р°С€Рµ РёРјСЏ</label>
+                  <label htmlFor="name" className="form-label">Ваше имя</label>
                   <input
                     type="text"
                     id="name"
                     className="form-input"
-                    placeholder="Р’РІРµРґРёС‚Рµ РІР°С€Рµ РёРјСЏ"
+                    placeholder="Введите ваше имя"
                   />
                 </div>
 
@@ -42,22 +39,22 @@ function Contact({ onNavigate }) {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="subject" className="form-label">РўРµРјР°</label>
+                  <label htmlFor="subject" className="form-label">Тема</label>
                   <input
                     type="text"
                     id="subject"
                     className="form-input"
-                    placeholder="РўРµРјР° РІР°С€РµРіРѕ СЃРѕРѕР±С‰РµРЅРёСЏ"
+                    placeholder="Тема вашего сообщения"
                   />
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="message" className="form-label">РЎРѕРѕР±С‰РµРЅРёРµ</label>
+                  <label htmlFor="message" className="form-label">Сообщение</label>
                   <textarea
                     id="message"
                     className="form-textarea"
                     rows="6"
-                    placeholder="Р’Р°С€Рµ СЃРѕРѕР±С‰РµРЅРёРµ..."
+                    placeholder="Ваше сообщение..."
                   ></textarea>
                 </div>
 
@@ -78,7 +75,7 @@ function Contact({ onNavigate }) {
                       strokeLinejoin="round"
                     />
                   </svg>
-                  РћС‚РїСЂР°РІРёС‚СЊ СЃРѕРѕР±С‰РµРЅРёРµ
+                  Отправить сообщение
                 </button>
               </form>
             </div>
@@ -99,7 +96,7 @@ function Contact({ onNavigate }) {
                     />
                   </svg>
                 </div>
-                <h3 className="info-title">РўРµР»РµС„РѕРЅ</h3>
+                <h3 className="info-title">Телефон</h3>
                 <p className="info-text">+375 (29) 673-16-26</p>
                 <p className="info-text">+375 (44) 464-48-02</p>
               </div>
@@ -147,9 +144,9 @@ function Contact({ onNavigate }) {
                     />
                   </svg>
                 </div>
-                <h3 className="info-title">РђРґСЂРµСЃ</h3>
-                <p className="info-text">РњРёРЅСЃРє, РїСЂ. РќРµР·Р°РІРёСЃРёРјРѕСЃС‚Рё,</p>
-                <p className="info-text">РґРѕРј 123, РѕС„РёСЃ 456</p>
+                <h3 className="info-title">Адрес</h3>
+                <p className="info-text">Минск, пр. Независимости,</p>
+                <p className="info-text">дом 123, офис 456</p>
               </div>
 
               <div className="info-card social-card">
@@ -169,7 +166,7 @@ function Contact({ onNavigate }) {
                     />
                   </svg>
                 </div>
-                <h3 className="info-title">РЎРѕС†РёР°Р»СЊРЅС‹Рµ СЃРµС‚Рё</h3>
+                <h3 className="info-title">Социальные сети</h3>
                 <div className="social-links">
                   <a href="https://ya.ru/" className="social-link">Facebook</a>
                   <a href="https://ya.ru/" className="social-link">Twitter</a>

@@ -24,7 +24,7 @@ export function useMovie(movieId) {
           setMovie(data);
         }
       } catch (err) {
-        console.error('РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ С„РёР»СЊРјР°:', err);
+        console.error('Ошибка получения фильма:', err);
         if (isMounted) setError(err);
       } finally {
         if (isMounted) setLoading(false);
@@ -40,6 +40,7 @@ export function useMovie(movieId) {
 
   return { movie, loading, error };
 }
+
 
 
 

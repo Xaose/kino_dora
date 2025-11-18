@@ -1,56 +1,83 @@
 ﻿import { useMemo, useState } from 'react';
 import './Pricing.scss';
-import Header from '../../Components/Header/Header';
 import FAQ from '../../Components/FAQ/FAQ';
 import Footer from '../../Components/Footer/Footer';
 
 const plans = [
   {
     id: 'basic',
-    name: 'Р‘Р°Р·Р°',
+    name: 'База',
     durationMonths: 3,
     amount: 15.14,
     pricePerMonth: 5.05,
-    description: 'Р”Р»СЏ Р·РЅР°РєРѕРјСЃС‚РІР° СЃ РїР»Р°С‚С„РѕСЂРјРѕР№ Рё РїСЂРѕСЃРјРѕС‚СЂР° РІ HD',
+    description: 'Для знакомства с платформой и просмотра в HD',
     features: [
-      'Р”РѕСЃС‚СѓРї Рє РїРѕР»РЅРѕР№ С„РёР»СЊРјРѕС‚РµРєРµ РІ HD',
-      '1 СѓСЃС‚СЂРѕР№СЃС‚РІРѕ РѕРґРЅРѕРІСЂРµРјРµРЅРЅРѕ',
-      'РЎРєР°С‡РёРІР°РЅРёРµ РґРѕ 5 С„РёР»СЊРјРѕРІ',
-      'РџРѕРґРґРµСЂР¶РєР° РІ С‡Р°С‚Рµ 24/7'
+      'Доступ к полной фильмотеке в HD',
+      '1 устройство одновременно',
+      'Скачивание до 5 фильмов',
+      'Поддержка в чате 24/7'
     ]
   },
   {
     id: 'standard',
-    name: 'РџРѕРґРїРёСЃРєР°',
+    name: 'Подписка',
     durationMonths: 6,
     amount: 22.99,
     previousAmount: 24.99,
     pricePerMonth: 3.83,
-    description: 'РћРїС‚РёРјР°Р»СЊРЅС‹Р№ С‚Р°СЂРёС„ СЃ РјР°РєСЃРёРјР°Р»СЊРЅС‹Рј СЃРѕРѕС‚РЅРѕС€РµРЅРёРµРј С†РµРЅР°/РєРѕРЅС‚РµРЅС‚',
+    description: 'Оптимальный тариф с максимальным соотношением цена/контент',
     features: [
-      'РљРёРЅРѕ + РґРѕСЂР°РјС‹ + СЌРєСЃРєР»СЋР·РёРІС‹',
-      '2 СѓСЃС‚СЂРѕР№СЃС‚РІР° РѕРґРЅРѕРІСЂРµРјРµРЅРЅРѕ',
-      'РЎРєР°С‡РёРІР°РЅРёРµ РґРѕ 20 С„РёР»СЊРјРѕРІ',
-      'Р Р°СЃС€РёСЂРµРЅРЅС‹Р№ РїСЂРѕС„РёР»СЊ Рё РєРѕР»Р»РµРєС†РёРё',
-      'РџСЂРёРѕСЂРёС‚РµС‚РЅР°СЏ РїРѕРґРґРµСЂР¶РєР°'
+      'Кино + дорамы + эксклюзивы',
+      '2 устройства одновременно',
+      'Скачивание до 20 фильмов',
+      'Расширенный профиль и коллекции',
+      'Приоритетная поддержка'
     ],
     isPopular: true
   },
   {
     id: 'premium',
-    name: 'РџСЂРµРјРєР°',
+    name: 'Премка',
     durationMonths: 12,
     amount: 35.19,
     pricePerMonth: 2.93,
-    description: 'Р”Р»СЏ С‚РµС…, РєС‚Рѕ СЃРјРѕС‚СЂРёС‚ РєР°Р¶РґС‹Р№ РґРµРЅСЊ Рё С…РѕС‡РµС‚ РјР°РєСЃРёРјСѓРј',
+    description: 'Для тех, кто смотрит каждый день и хочет максимум',
     features: [
-      '4Рљ + Dolby Vision/Atmos',
-      '4 СѓСЃС‚СЂРѕР№СЃС‚РІР° РѕРґРЅРѕРІСЂРµРјРµРЅРЅРѕ',
-      'РЎРєР°С‡РёРІР°РЅРёРµ Р±РµР· РѕРіСЂР°РЅРёС‡РµРЅРёР№',
-      'РЎРµРјРµР№РЅС‹Р№ РґРѕСЃС‚СѓРї Рё РїСЂРѕС„РёР»Рё РґРµС‚РµР№',
-      'РџРµСЂСЃРѕРЅР°Р»СЊРЅС‹Рµ СЂРµРєРѕРјРµРЅРґР°С†РёРё'
+      '4K + Dolby Vision/Atmos',
+      '4 устройства одновременно',
+      'Скачивание без ограничений',
+      'Семейный доступ и профили детей',
+      'Персональные рекомендации'
     ]
   }
+];
+
+const valueProps = [
+  {
+    id: 'quality',
+    icon: '✨',
+    title: 'Премиальное качество',
+    description: '4K + HDR, Dolby Vision & Atmos и адаптивный битрейт под любое устройство.'
+  },
+  {
+    id: 'library',
+    icon: '🎞️',
+    title: 'Живая библиотека',
+    description: 'Новинки каждую неделю, авторские подборки и эксклюзивы, которых нет на других сервисах.'
+  },
+  {
+    id: 'privacy',
+    icon: '🔐',
+    title: 'Честный доступ',
+    description: 'Без рекламы, без скрытых платежей и с возможностью отмены подписки в один клик.'
+  }
+];
+
+const assurancePoints = [
+  '7-дневный триал на любой тариф',
+  'Прозрачная история платежей в профиле',
+  'Скидка -15% при оплате карты резидента СНГ',
+  'Поддержка отвечает в среднем за 2 минуты'
 ];
 
 const formatCurrency = (value) => `$${value.toFixed(2)}`;
@@ -79,7 +106,7 @@ function Pricing({ onNavigate }) {
     setPurchaseState({ type: null, message: '' });
 
     try {
-      // РёРјРёС‚Р°С†РёСЏ РѕР±СЂР°С‰РµРЅРёСЏ Рє РїР»Р°С‚РµР¶РЅРѕРјСѓ СЃРµСЂРІРёСЃСѓ
+      // имитация обращения к платежному сервису
       await new Promise(resolve => setTimeout(resolve, 1200));
 
       const activatedAt = new Date();
@@ -99,13 +126,13 @@ function Pricing({ onNavigate }) {
 
       setPurchaseState({
         type: 'success',
-        message: `РџРѕРґРїРёСЃРєР° В«${selectedPlan.name}В» Р°РєС‚РёРІРЅР° РґРѕ ${expiresAt.toLocaleDateString('ru-RU')}`
+        message: `Подписка «${selectedPlan.name}» активна до ${expiresAt.toLocaleDateString('ru-RU')}`
       });
     } catch (error) {
       console.error(error);
       setPurchaseState({
         type: 'error',
-        message: 'РќРµ СѓРґР°Р»РѕСЃСЊ РїСЂРѕРІРµСЃС‚Рё РѕРїР»Р°С‚Сѓ. РџРѕРїСЂРѕР±СѓР№С‚Рµ С‡СѓС‚СЊ РїРѕР·Р¶Рµ.'
+        message: 'Не удалось провести оплату. Попробуйте чуть позже.'
       });
     } finally {
       setIsProcessing(false);
@@ -114,45 +141,67 @@ function Pricing({ onNavigate }) {
 
   return (
     <div className="pricing-page">
-      <Header onNavigate={onNavigate} />
-
       <main className="pricing-main">
         <section className="pricing-hero">
           <div className="pricing-hero-content">
-            <p className="hero-label">РџРѕРґРїРёСЃРєР° Kino Dora</p>
-            <h1>РћРґРёРЅ РєР»РёРє РґРѕ Р»СЋР±РёРјС‹С… РёСЃС‚РѕСЂРёР№</h1>
+            <div className="hero-pill">Новинки каждую неделю</div>
+            <p className="hero-label">Подписка Kino Dora</p>
+            <h1>Один клик до любимых историй</h1>
             <p className="hero-description">
-              РџРѕРґР±РµСЂРёС‚Рµ С‚Р°СЂРёС„ РїРѕРґ СЃРІРѕР№ С‚РµРјРї РїСЂРѕСЃРјРѕС‚СЂР°: РѕС‚ РІРµС‡РµСЂРЅРёС… РїСЂРµРјСЊРµСЂ РЅР° РґРёРІР°РЅРµ
-              РґРѕ СЃРµРјРµР№РЅС‹С… РјР°СЂР°С„РѕРЅРѕРІ РІ 4Рљ. Р’СЃРµ РїРѕРґРїРёСЃРєРё РјРѕР¶РЅРѕ РѕС‚РјРµРЅРёС‚СЊ РІ Р»СЋР±РѕР№ РјРѕРјРµРЅС‚.
+              Подберите тариф под свой темп просмотра: от вечерних премьер на диване
+              до семейных марафонов в 4K. Все подписки можно отменить в любой момент.
             </p>
+            <ul className="hero-highlights">
+              <li>7 дней бесплатно + отмена без звонков</li>
+              <li>Персональные рекомендации и коллекции</li>
+              <li>Синхронизация прогресса между устройствами</li>
+            </ul>
             <div className="pricing-hero-actions">
               <button className="primary-action" onClick={scrollToPlans}>
-                Р’С‹Р±СЂР°С‚СЊ С‚Р°СЂРёС„
+                Выбрать тариф
               </button>
               <button className="secondary-action" onClick={() => onNavigate?.('contact')}>
-                РЎРІСЏР·Р°С‚СЊСЃСЏ СЃ РЅР°РјРё
+                Связаться с нами
               </button>
             </div>
           </div>
 
           <div className="hero-card">
             <div className="card-gradient"></div>
-            <h3>Р”Рѕ 4 СѓСЃС‚СЂРѕР№СЃС‚РІ</h3>
-            <p>РЎРјРѕС‚СЂРёС‚Рµ РЅР° С‚РµР»РµРІРёР·РѕСЂРµ, РїР»Р°РЅС€РµС‚Рµ, РєРѕРЅСЃРѕР»Рё Рё РІ РїСЂРёР»РѕР¶РµРЅРёРё</p>
+            <h3>До 4 устройств</h3>
+            <p>Смотрите на телевизоре, планшете, консоли и в приложении</p>
             <div className="stats">
               <div>
                 <span className="stat-value">4K</span>
-                <span className="stat-label">РњР°РєСЃРёРјР°Р»СЊРЅРѕРµ РєР°С‡РµСЃС‚РІРѕ</span>
+                <span className="stat-label">Максимальное качество</span>
               </div>
               <div>
                 <span className="stat-value">1200+</span>
-                <span className="stat-label">Р¤РёР»СЊРјРѕРІ Рё РґРѕСЂР°Рј</span>
+                <span className="stat-label">Фильмов и дорам</span>
               </div>
               <div>
                 <span className="stat-value">24/7</span>
-                <span className="stat-label">Р–РёРІР°СЏ РїРѕРґРґРµСЂР¶РєР°</span>
+                <span className="stat-label">Живая поддержка</span>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="value-props-section">
+          <div className="section-heading">
+            <p>Почему выбирают нас</p>
+            <h2>Контент и сервис без компромиссов</h2>
+          </div>
+          <div className="value-props-grid">
+            {valueProps.map((prop) => (
+              <article key={prop.id} className="value-prop-card">
+                <span className="value-prop-icon" aria-hidden="true">
+                  {prop.icon}
+                </span>
+                <h3>{prop.title}</h3>
+                <p>{prop.description}</p>
+              </article>
+            ))}
           </div>
         </section>
 
@@ -164,10 +213,10 @@ function Pricing({ onNavigate }) {
                 className={`plan-card ${plan.isPopular ? 'plan-popular' : ''} ${plan.id === selectedPlanId ? 'plan-selected' : ''}`}
                 onClick={() => setSelectedPlanId(plan.id)}
               >
-                {plan.isPopular && <span className="plan-badge">РўРѕРї РІС‹Р±РѕСЂ</span>}
+                {plan.isPopular && <span className="plan-badge">Топ выбор</span>}
                 <header>
-                  <p className="plan-duration">{plan.durationMonths} РјРµСЃ.</p>
-                  <h3>{plan.name}</h3>
+                  <p className="plan-duration">{plan.durationMonths} мес.</p>
+                  <h3 className='plan-name'>{plan.name}</h3>
                   <p className="plan-description">{plan.description}</p>
                 </header>
 
@@ -176,7 +225,7 @@ function Pricing({ onNavigate }) {
                     <span className="plan-old">{formatCurrency(plan.previousAmount)}</span>
                   )}
                   <p className="plan-new">{formatCurrency(plan.amount)}</p>
-                  <span className="plan-monthly">в‰€ {formatCurrency(plan.pricePerMonth)}/РјРµСЃ</span>
+                  <span className="plan-monthly">≈ {formatCurrency(plan.pricePerMonth)}/мес</span>
                 </div>
 
                 <ul className="plan-features">
@@ -193,7 +242,7 @@ function Pricing({ onNavigate }) {
                     setSelectedPlanId(plan.id);
                   }}
                 >
-                  {plan.id === selectedPlanId ? 'Р’С‹Р±СЂР°РЅ' : 'Р’С‹Р±СЂР°С‚СЊ'}
+                  {plan.id === selectedPlanId ? 'Выбран' : 'Выбрать'}
                 </button>
               </article>
             ))}
@@ -201,22 +250,22 @@ function Pricing({ onNavigate }) {
 
           <div className="checkout-panel">
             <div className="checkout-card">
-              <p className="checkout-label">Р’С‹ РІС‹Р±СЂР°Р»Рё</p>
-              <h3>{selectedPlan?.name}</h3>
-              <p className="checkout-period">{selectedPlan?.durationMonths} РјРµСЃСЏС†РµРІ РїРѕРґРїРёСЃРєРё</p>
+              <p className="checkout-label">Вы выбрали</p>
+              <h3 className='checkout-name'>{selectedPlan?.name}</h3>
+              <p className="checkout-period">{selectedPlan?.durationMonths} месяцев подписки</p>
 
               <div className="checkout-price">
-                <span>Рљ РѕРїР»Р°С‚Рµ</span>
-                <strong>{selectedPlan ? formatCurrency(selectedPlan.amount) : 'вЂ”'}</strong>
+                <span className='checkout-price-label'>К оплате</span>
+                <strong className='checkout-price-value'>{selectedPlan ? formatCurrency(selectedPlan.amount) : '—'}</strong>
               </div>
 
               <div className="checkout-benefits">
-                <p>Р§С‚Рѕ РІС…РѕРґРёС‚:</p>
+                <p className='checkout-benefits-label'>Что входит:</p>
                 <ul>
                   {selectedPlan?.features.slice(0, 3).map((feature) => (
                     <li key={feature}>{feature}</li>
                   ))}
-                  <li>РћС‚РјРµРЅР° РІ 1 РєР»РёРє РІ РїСЂРѕС„РёР»Рµ</li>
+                  <li>Отмена в 1 клик в профиле</li>
                 </ul>
               </div>
 
@@ -226,7 +275,7 @@ function Pricing({ onNavigate }) {
                 onClick={handlePurchase}
                 disabled={!selectedPlan || isProcessing}
               >
-                {isProcessing ? 'РџРѕРєСѓРїР°РµРјвЂ¦' : 'РћРїР»Р°С‚РёС‚СЊ РїРѕРґРїРёСЃРєСѓ'}
+                {isProcessing ? 'Покупаем…' : 'Оплатить подписку'}
               </button>
 
               {purchaseState.message && (
@@ -240,10 +289,26 @@ function Pricing({ onNavigate }) {
                 type="button"
                 onClick={() => onNavigate?.('contact')}
               >
-                РќСѓР¶РЅР° РїРѕРјРѕС‰СЊ
+                Нужна помощь
               </button>
             </div>
           </div>
+        </section>
+
+        <section className="assurance-section">
+          <div className="assurance-card">
+            <p className="assurance-label">Забота о зрителях</p>
+            <h2>Удобная оплата и гарантия возврата</h2>
+            <p className="assurance-text">
+              Если сервис не подошёл — вернём деньги в течение 14 дней, а оставшийся доступ
+              останется до конца оплаченного периода. Управляйте подпиской прямо в профиле.
+            </p>
+          </div>
+          <ul className="assurance-list">
+            {assurancePoints.map((point) => (
+              <li key={point}>{point}</li>
+            ))}
+          </ul>
         </section>
       </main>
 

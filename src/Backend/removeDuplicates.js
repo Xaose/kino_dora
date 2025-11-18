@@ -2,31 +2,31 @@
 import { getCurrentUser } from './authService';
 
 /**
- * Р¤СѓРЅРєС†РёСЏ РґР»СЏ РїРѕРёСЃРєР° Рё СѓРґР°Р»РµРЅРёСЏ РґСѓР±Р»РёРєР°С‚РѕРІ С„РёР»СЊРјРѕРІ
- * Р”СѓР±Р»РёРєР°С‚С‹ РѕРїСЂРµРґРµР»СЏСЋС‚СЃСЏ РїРѕ РЅР°Р·РІР°РЅРёСЋ (СЃ СѓС‡РµС‚РѕРј СЂРµРіРёСЃС‚СЂР°)
+ * Функция для поиска и удаления дубликатов фильмов
+ * Дубликаты определяются по названию (с учетом регистра)
  */
 export const removeDuplicateMovies = async () => {
   try {
-    // РџСЂРѕРІРµСЂСЏРµРј Р°РІС‚РѕСЂРёР·Р°С†РёСЋ
+    // Проверяем авторизацию
     const user = getCurrentUser();
     if (!user) {
-      throw new Error('Р”Р»СЏ СѓРґР°Р»РµРЅРёСЏ РґСѓР±Р»РёРєР°С‚РѕРІ РЅРµРѕР±С…РѕРґРёРјРѕ РІРѕР№С‚Рё РІ СЃРёСЃС‚РµРјСѓ');
+      throw new Error('Для удаления дубликатов необходимо войти в систему');
     }
 
-    console.log('РќР°С‡РёРЅР°СЋ РїРѕРёСЃРє РґСѓР±Р»РёРєР°С‚РѕРІ С„РёР»СЊРјРѕРІ...');
-    console.log('РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ:', user.email);
+    console.log('Начинаю поиск дубликатов фильмов...');
+    console.log('Пользователь:', user.email);
 
-    // РџРѕР»СѓС‡Р°РµРј РІСЃРµ С„РёР»СЊРјС‹ (СЃС‹СЂС‹Рµ РґР°РЅРЅС‹Рµ РґР»СЏ РґРѕСЃС‚СѓРїР° Рє createdAt)
+    // Получаем все фильмы (сырые данные для доступа к createdAt)
     const rawMovies = await getAllDocuments('movies');
-    console.log(`Р’СЃРµРіРѕ С„РёР»СЊРјРѕРІ РІ Р±Р°Р·Рµ: ${rawMovies.length}`);
+    console.log(`Всего фильмов в базе: ${rawMovies.length}`);
 
-    // РќРѕСЂРјР°Р»РёР·СѓРµРј РЅР°Р·РІР°РЅРёСЏ РґР»СЏ СЃСЂР°РІРЅРµРЅРёСЏ
+    // Нормализуем названия для сравнения
     const moviesByTitle = {};
     
     rawMovies.forEach((movie) => {
-      // РСЃРїРѕР»СЊР·СѓРµРј name РёР»Рё title РґР»СЏ СЃСЂР°РІРЅРµРЅРёСЏ
+      // Используем name или title для сравнения
       const title = (movie.name || movie.title || '').trim().toLowerCase();
-      if (!title) return; // РџСЂРѕРїСѓСЃРєР°РµРј С„РёР»СЊРјС‹ Р±РµР· РЅР°Р·РІР°РЅРёСЏ
+      if (!title) return; // Пропускаем фильмы без названия
       
       if (!moviesByTitle[title]) {
         moviesByTitle[title] = [];
@@ -34,38 +34,38 @@ export const removeDuplicateMovies = async () => {
       moviesByTitle[title].push(movie);
     });
 
-    // РќР°С…РѕРґРёРј РґСѓР±Р»РёРєР°С‚С‹ (РЅР°Р·РІР°РЅРёСЏ СЃ Р±РѕР»РµРµ С‡РµРј РѕРґРЅРёРј С„РёР»СЊРјРѕРј)
+    // Находим дубликаты (названия с более чем одним фильмом)
     const duplicates = {};
     let totalDuplicates = 0;
 
     Object.keys(moviesByTitle).forEach((title) => {
       if (moviesByTitle[title].length > 1) {
         duplicates[title] = moviesByTitle[title];
-        totalDuplicates += moviesByTitle[title].length - 1; // -1 РїРѕС‚РѕРјСѓ С‡С‚Рѕ РѕРґРёРЅ РѕСЃС‚Р°РІР»СЏРµРј
+        totalDuplicates += moviesByTitle[title].length - 1; // -1 потому что один оставляем
       }
     });
 
-    console.log(`\nРќР°Р№РґРµРЅРѕ ${Object.keys(duplicates).length} СѓРЅРёРєР°Р»СЊРЅС‹С… РЅР°Р·РІР°РЅРёР№ СЃ РґСѓР±Р»РёРєР°С‚Р°РјРё`);
-    console.log(`Р’СЃРµРіРѕ РґСѓР±Р»РёРєР°С‚РѕРІ РґР»СЏ СѓРґР°Р»РµРЅРёСЏ: ${totalDuplicates}`);
+    console.log(`\nНайдено ${Object.keys(duplicates).length} уникальных названий с дубликатами`);
+    console.log(`Всего дубликатов для удаления: ${totalDuplicates}`);
 
     if (Object.keys(duplicates).length === 0) {
-      console.log('вњ“ Р”СѓР±Р»РёРєР°С‚С‹ РЅРµ РЅР°Р№РґРµРЅС‹!');
+      console.log('вњ“ Дубликаты не найдены!');
       return {
         success: true,
         duplicatesFound: 0,
         duplicatesRemoved: 0,
-        message: 'Р”СѓР±Р»РёРєР°С‚С‹ РЅРµ РЅР°Р№РґРµРЅС‹'
+        message: 'Дубликаты не найдены'
       };
     }
 
-    // РџРѕРєР°Р·С‹РІР°РµРј РЅР°Р№РґРµРЅРЅС‹Рµ РґСѓР±Р»РёРєР°С‚С‹
-    console.log('\n=== РќР°Р№РґРµРЅРЅС‹Рµ РґСѓР±Р»РёРєР°С‚С‹ ===');
+    // Показываем найденные дубликаты
+    console.log('\n=== Найденные дубликаты ===');
     Object.keys(duplicates).forEach((title) => {
       const movies = duplicates[title];
-      const displayTitle = movies[0].name || movies[0].title || 'Р‘РµР· РЅР°Р·РІР°РЅРёСЏ';
-      console.log(`\n"${displayTitle}" (${movies.length} РєРѕРїРёР№):`);
+      const displayTitle = movies[0].name || movies[0].title || 'Без названия';
+      console.log(`\n"${displayTitle}" (${movies.length} копий):`);
       movies.forEach((movie, index) => {
-        let dateStr = 'РЅРµРёР·РІРµСЃС‚РЅРѕ';
+        let dateStr = 'неизвестно';
         if (movie.createdAt) {
           try {
             if (movie.createdAt.toDate) {
@@ -76,26 +76,26 @@ export const removeDuplicateMovies = async () => {
               dateStr = new Date(movie.createdAt).toLocaleString('ru-RU');
             }
           } catch (e) {
-            dateStr = 'РЅРµРёР·РІРµСЃС‚РЅРѕ';
+            dateStr = 'неизвестно';
           }
         }
-        console.log(`  ${index + 1}. ID: ${movie.id}, СЃРѕР·РґР°РЅ: ${dateStr}`);
+        console.log(`  ${index + 1}. ID: ${movie.id}, создан: ${dateStr}`);
       });
     });
 
-    // РЈРґР°Р»СЏРµРј РґСѓР±Р»РёРєР°С‚С‹ (РѕСЃС‚Р°РІР»СЏРµРј СЃР°РјС‹Р№ РЅРѕРІС‹Р№, СѓРґР°Р»СЏРµРј РѕСЃС‚Р°Р»СЊРЅС‹Рµ)
+    // Удаляем дубликаты (оставляем самый новый, удаляем остальные)
     const results = [];
     let removedCount = 0;
 
     for (const title of Object.keys(duplicates)) {
       const movies = duplicates[title];
       
-      // РЎРѕСЂС‚РёСЂСѓРµРј РїРѕ РґР°С‚Рµ СЃРѕР·РґР°РЅРёСЏ (СЃР°РјС‹Р№ РЅРѕРІС‹Р№ РїРµСЂРІС‹Р№)
+      // Сортируем по дате создания (самый новый первый)
       movies.sort((a, b) => {
         let dateA = new Date(0);
         let dateB = new Date(0);
         
-        // РћР±СЂР°Р±Р°С‚С‹РІР°РµРј Timestamp РёР· Firestore
+        // Обрабатываем Timestamp из Firestore
         if (a.createdAt) {
           if (a.createdAt.toDate) {
             dateA = a.createdAt.toDate();
@@ -116,22 +116,22 @@ export const removeDuplicateMovies = async () => {
           }
         }
         
-        return dateB.getTime() - dateA.getTime(); // РќРѕРІС‹Рµ РїРµСЂРІС‹РјРё
+        return dateB.getTime() - dateA.getTime(); // Новые первыми
       });
 
-      // РћСЃС‚Р°РІР»СЏРµРј РїРµСЂРІС‹Р№ (СЃР°РјС‹Р№ РЅРѕРІС‹Р№), СѓРґР°Р»СЏРµРј РѕСЃС‚Р°Р»СЊРЅС‹Рµ
+      // Оставляем первый (самый новый), удаляем остальные
       const toKeep = movies[0];
       const toRemove = movies.slice(1);
 
-      const keepTitle = toKeep.name || toKeep.title || 'Р‘РµР· РЅР°Р·РІР°РЅРёСЏ';
-      console.log(`\nРћСЃС‚Р°РІР»СЏРµРј: "${keepTitle}" (ID: ${toKeep.id})`);
+      const keepTitle = toKeep.name || toKeep.title || 'Без названия';
+      console.log(`\nОставляем: "${keepTitle}" (ID: ${toKeep.id})`);
       
       for (const movie of toRemove) {
         try {
           await moviesService.delete(movie.id);
           removedCount++;
-          const movieTitle = movie.name || movie.title || 'Р‘РµР· РЅР°Р·РІР°РЅРёСЏ';
-          console.log(`  вњ“ РЈРґР°Р»РµРЅ РґСѓР±Р»РёРєР°С‚: "${movieTitle}" (ID: ${movie.id})`);
+          const movieTitle = movie.name || movie.title || 'Без названия';
+          console.log(`  вњ“ Удален дубликат: "${movieTitle}" (ID: ${movie.id})`);
           results.push({
             success: true,
             title: movieTitle,
@@ -139,8 +139,8 @@ export const removeDuplicateMovies = async () => {
             action: 'deleted'
           });
         } catch (error) {
-          const movieTitle = movie.name || movie.title || 'Р‘РµР· РЅР°Р·РІР°РЅРёСЏ';
-          console.error(`  вњ— РћС€РёР±РєР° РїСЂРё СѓРґР°Р»РµРЅРёРё "${movieTitle}" (ID: ${movie.id}):`, error);
+          const movieTitle = movie.name || movie.title || 'Без названия';
+          console.error(`  вњ— Ошибка при удалении "${movieTitle}" (ID: ${movie.id}):`, error);
           results.push({
             success: false,
             title: movieTitle,
@@ -152,26 +152,26 @@ export const removeDuplicateMovies = async () => {
       }
     }
 
-    console.log(`\n=== Р РµР·СѓР»СЊС‚Р°С‚С‹ ===`);
-    console.log(`вњ“ РЈСЃРїРµС€РЅРѕ СѓРґР°Р»РµРЅРѕ РґСѓР±Р»РёРєР°С‚РѕРІ: ${removedCount}`);
-    console.log(`вњ— РћС€РёР±РѕРє РїСЂРё СѓРґР°Р»РµРЅРёРё: ${results.filter(r => !r.success).length}`);
+    console.log(`\n=== Результаты ===`);
+    console.log(`вњ“ Успешно удалено дубликатов: ${removedCount}`);
+    console.log(`вњ— Ошибок при удалении: ${results.filter(r => !r.success).length}`);
 
     return {
       success: true,
       duplicatesFound: totalDuplicates,
       duplicatesRemoved: removedCount,
       results: results,
-      message: `РЈРґР°Р»РµРЅРѕ ${removedCount} РґСѓР±Р»РёРєР°С‚РѕРІ РёР· ${totalDuplicates} РЅР°Р№РґРµРЅРЅС‹С…`
+      message: `Удалено ${removedCount} дубликатов из ${totalDuplicates} найденных`
     };
   } catch (error) {
-    console.error('РљСЂРёС‚РёС‡РµСЃРєР°СЏ РѕС€РёР±РєР° РїСЂРё СѓРґР°Р»РµРЅРёРё РґСѓР±Р»РёРєР°С‚РѕРІ:', error);
+    console.error('Критическая ошибка при удалении дубликатов:', error);
     throw error;
   }
 };
 
-// Р”РµР»Р°РµРј С„СѓРЅРєС†РёСЋ РґРѕСЃС‚СѓРїРЅРѕР№ РІ РєРѕРЅСЃРѕР»Рё Р±СЂР°СѓР·РµСЂР°
+// Делаем функцию доступной в консоли браузера
 if (typeof window !== 'undefined') {
   window.removeDuplicateMovies = removeDuplicateMovies;
-  console.log('Р¤СѓРЅРєС†РёСЏ removeDuplicateMovies() РґРѕСЃС‚СѓРїРЅР° РІ РєРѕРЅСЃРѕР»Рё. Р’С‹Р·РѕРІРёС‚Рµ РµС‘ РґР»СЏ СѓРґР°Р»РµРЅРёСЏ РґСѓР±Р»РёРєР°С‚РѕРІ.');
+  console.log('Функция removeDuplicateMovies() доступна в консоли. Вызовите её для удаления дубликатов.');
 }
 

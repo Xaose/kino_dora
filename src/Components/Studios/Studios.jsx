@@ -55,7 +55,7 @@ function Studios() {
   ];
 
   return (
-    <section className="studios-section">
+    <section className="studios-section" id="studios-section">
       <h2 className="studios-title">Студии</h2>
       
       <div className="studios-grid">

@@ -16,7 +16,7 @@ export function useMovies() {
           setMovies(data);
         }
       } catch (err) {
-        console.error('РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ С„РёР»СЊРјРѕРІ:', err);
+        console.error('Ошибка получения фильмов:', err);
         if (isMounted) setError(err);
       } finally {
         if (isMounted) setLoading(false);

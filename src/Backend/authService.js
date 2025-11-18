@@ -9,22 +9,22 @@ import { auth, db } from './firebaseConfig';
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 
 /**
- * Р РµРіРёСЃС‚СЂР°С†РёСЏ РЅРѕРІРѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+ * Регистрация нового пользователя
  */
 export const registerUser = async (email, password, userData = {}) => {
   try {
-    // РЎРѕР·РґР°РµРј РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РІ Firebase Auth
+    // Создаем пользователя в Firebase Auth
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // РћР±РЅРѕРІР»СЏРµРј РїСЂРѕС„РёР»СЊ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+    // Обновляем профиль пользователя
     if (userData.name) {
       await updateProfile(user, {
         displayName: userData.name
       });
     }
 
-    // РЎРѕС…СЂР°РЅСЏРµРј РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅСѓСЋ РёРЅС„РѕСЂРјР°С†РёСЋ РІ Firestore
+    // Сохраняем дополнительную информацию в Firestore
     const userDoc = {
       uid: user.uid,
       email: user.email,
@@ -47,8 +47,8 @@ export const registerUser = async (email, password, userData = {}) => {
       }
     };
   } catch (error) {
-    console.error('РћС€РёР±РєР° СЂРµРіРёСЃС‚СЂР°С†РёРё:', error);
-    // РџСЂРѕРІРµСЂСЏРµРј СЂР°Р·РЅС‹Рµ РІР°СЂРёР°РЅС‚С‹ РєРѕРґР° РѕС€РёР±РєРё
+    console.error('Ошибка регистрации:', error);
+    // Проверяем разные варианты кода ошибки
     const errorCode = error.code || error.message || '';
     return {
       success: false,
@@ -58,14 +58,14 @@ export const registerUser = async (email, password, userData = {}) => {
 };
 
 /**
- * Р’С…РѕРґ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+ * Вход пользователя
  */
 export const loginUser = async (email, password) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // РџРѕР»СѓС‡Р°РµРј РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅСѓСЋ РёРЅС„РѕСЂРјР°С†РёСЋ РёР· Firestore
+    // Получаем дополнительную информацию из Firestore
     const userDoc = await getDoc(doc(db, 'users', user.uid));
     const userData = userDoc.exists() ? userDoc.data() : {};
 
@@ -79,7 +79,7 @@ export const loginUser = async (email, password) => {
       }
     };
   } catch (error) {
-    console.error('РћС€РёР±РєР° РІС…РѕРґР°:', error);
+    console.error('Ошибка входа:', error);
     return {
       success: false,
       error: getErrorMessage(error.code)
@@ -88,14 +88,14 @@ export const loginUser = async (email, password) => {
 };
 
 /**
- * Р’С‹С…РѕРґ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+ * Выход пользователя
  */
 export const logoutUser = async () => {
   try {
     await signOut(auth);
     return { success: true };
   } catch (error) {
-    console.error('РћС€РёР±РєР° РІС‹С…РѕРґР°:', error);
+    console.error('Ошибка выхода:', error);
     return {
       success: false,
       error: error.message
@@ -104,21 +104,21 @@ export const logoutUser = async () => {
 };
 
 /**
- * РџРѕР»СѓС‡РёС‚СЊ С‚РµРєСѓС‰РµРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+ * Получить текущего пользователя
  */
 export const getCurrentUser = () => {
   return auth.currentUser;
 };
 
 /**
- * РћР±РЅРѕРІРёС‚СЊ РїСЂРѕС„РёР»СЊ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РІ Firestore
- * РЎРѕР·РґР°РµС‚ РґРѕРєСѓРјРµРЅС‚, РµСЃР»Рё РµРіРѕ РЅРµС‚, РёР»Рё РѕР±РЅРѕРІР»СЏРµС‚ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёР№
+ * Обновить профиль пользователя в Firestore
+ * Создает документ, если его нет, или обновляет существующий
  */
 export const updateUserProfile = async (userId, userData) => {
   try {
     const userDocRef = doc(db, 'users', userId);
     
-    // РџСЂРѕРІРµСЂСЏРµРј, СЃСѓС‰РµСЃС‚РІСѓРµС‚ Р»Рё РґРѕРєСѓРјРµРЅС‚
+    // Проверяем, существует ли документ
     const userDoc = await getDoc(userDocRef);
     
     const updateData = {
@@ -127,11 +127,11 @@ export const updateUserProfile = async (userId, userData) => {
     };
 
     if (userDoc.exists()) {
-      // Р”РѕРєСѓРјРµРЅС‚ СЃСѓС‰РµСЃС‚РІСѓРµС‚ - РѕР±РЅРѕРІР»СЏРµРј
+      // Документ существует - обновляем
       await updateDoc(userDocRef, updateData);
     } else {
-      // Р”РѕРєСѓРјРµРЅС‚ РЅРµ СЃСѓС‰РµСЃС‚РІСѓРµС‚ - СЃРѕР·РґР°РµРј РЅРѕРІС‹Р№
-      // РџРѕР»СѓС‡Р°РµРј С‚РµРєСѓС‰РµРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РґР»СЏ Р±Р°Р·РѕРІС‹С… РґР°РЅРЅС‹С…
+      // Документ не существует - создаем новый
+      // Получаем текущего пользователя для базовых данных
       const currentUser = auth.currentUser;
       const newUserDoc = {
         uid: userId,
@@ -147,7 +147,7 @@ export const updateUserProfile = async (userId, userData) => {
     
     return { success: true };
   } catch (error) {
-    console.error('РћС€РёР±РєР° РѕР±РЅРѕРІР»РµРЅРёСЏ РїСЂРѕС„РёР»СЏ:', error);
+    console.error('Ошибка обновления профиля:', error);
     return {
       success: false,
       error: error.message
@@ -156,12 +156,12 @@ export const updateUserProfile = async (userId, userData) => {
 };
 
 /**
- * РџРѕРґРїРёСЃРєР° РЅР° РёР·РјРµРЅРµРЅРёСЏ СЃРѕСЃС‚РѕСЏРЅРёСЏ Р°СѓС‚РµРЅС‚РёС„РёРєР°С†РёРё
+ * Подписка на изменения состояния аутентификации
  */
 export const onAuthStateChange = (callback) => {
   return onAuthStateChanged(auth, async (user) => {
     if (user) {
-      // РџРѕР»СѓС‡Р°РµРј РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅСѓСЋ РёРЅС„РѕСЂРјР°С†РёСЋ РёР· Firestore
+      // Получаем дополнительную информацию из Firestore
       try {
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         const userData = userDoc.exists() ? userDoc.data() : {};
@@ -172,7 +172,7 @@ export const onAuthStateChange = (callback) => {
           ...userData
         });
       } catch (error) {
-        console.error('РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ РґР°РЅРЅС‹С… РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ:', error);
+        console.error('Ошибка получения данных пользователя:', error);
         callback({
           uid: user.uid,
           email: user.email,
@@ -186,34 +186,34 @@ export const onAuthStateChange = (callback) => {
 };
 
 /**
- * РџСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёРµ РєРѕРґР° РѕС€РёР±РєРё Firebase РІ РїРѕРЅСЏС‚РЅРѕРµ СЃРѕРѕР±С‰РµРЅРёРµ
+ * Преобразование кода ошибки Firebase в понятное сообщение
  */
 const getErrorMessage = (errorCode) => {
   const errorMessages = {
-    'auth/email-already-in-use': 'Р­С‚РѕС‚ email СѓР¶Рµ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ',
-    'auth/invalid-email': 'РќРµРІРµСЂРЅС‹Р№ С„РѕСЂРјР°С‚ email',
-    'auth/operation-not-allowed': 'РћРїРµСЂР°С†РёСЏ РЅРµ СЂР°Р·СЂРµС€РµРЅР°',
-    'auth/weak-password': 'РџР°СЂРѕР»СЊ СЃР»РёС€РєРѕРј СЃР»Р°Р±С‹Р№ (РјРёРЅРёРјСѓРј 6 СЃРёРјРІРѕР»РѕРІ)',
-    'auth/user-disabled': 'Р­С‚РѕС‚ Р°РєРєР°СѓРЅС‚ Р±С‹Р» РѕС‚РєР»СЋС‡РµРЅ',
-    'auth/user-not-found': 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ СЃ С‚Р°РєРёРј email РЅРµ РЅР°Р№РґРµРЅ',
-    'auth/wrong-password': 'РќРµРІРµСЂРЅС‹Р№ РїР°СЂРѕР»СЊ',
-    'auth/invalid-credential': 'РќРµРІРµСЂРЅС‹Р№ email РёР»Рё РїР°СЂРѕР»СЊ',
-    'auth/too-many-requests': 'РЎР»РёС€РєРѕРј РјРЅРѕРіРѕ РїРѕРїС‹С‚РѕРє. РџРѕРїСЂРѕР±СѓР№С‚Рµ РїРѕР·Р¶Рµ',
-    'auth/network-request-failed': 'РћС€РёР±РєР° СЃРµС‚Рё. РџСЂРѕРІРµСЂСЊС‚Рµ РїРѕРґРєР»СЋС‡РµРЅРёРµ Рє РёРЅС‚РµСЂРЅРµС‚Сѓ',
-    'permission-denied': 'РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РїСЂР°РІ РґРѕСЃС‚СѓРїР°. РџСЂРѕРІРµСЂСЊС‚Рµ РїСЂР°РІРёР»Р° Firestore РІ Firebase Console',
-    'Missing or insufficient permissions': 'РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РїСЂР°РІ РґРѕСЃС‚СѓРїР°. РџСЂРѕРІРµСЂСЊС‚Рµ РїСЂР°РІРёР»Р° Firestore РІ Firebase Console'
+    'auth/email-already-in-use': 'Этот email Сѓже используется',
+    'auth/invalid-email': 'Неверный формат email',
+    'auth/operation-not-allowed': 'Операция не разрешена',
+    'auth/weak-password': 'Пароль слишком слабый (минимум 6 символов)',
+    'auth/user-disabled': 'Этот аккаунт был отключен',
+    'auth/user-not-found': 'Пользователь с таким email не найден',
+    'auth/wrong-password': 'Неверный пароль',
+    'auth/invalid-credential': 'Неверный email или пароль',
+    'auth/too-many-requests': 'Слишком много попыток. Попробуйте позже',
+    'auth/network-request-failed': 'Ошибка сети. Проверьте подключение к интернету',
+    'permission-denied': 'Недостаточно прав доступа. Проверьте правила Firestore в Firebase Console',
+    'Missing or insufficient permissions': 'Недостаточно прав доступа. Проверьте правила Firestore в Firebase Console'
   };
 
-  // РџСЂРѕРІРµСЂСЏРµРј, РµСЃС‚СЊ Р»Рё РєРѕРґ РѕС€РёР±РєРё РІ СЃРѕРѕР±С‰РµРЅРёСЏС…
+  // Проверяем, есть ли код ошибки в сообщениях
   if (errorMessages[errorCode]) {
     return errorMessages[errorCode];
   }
 
-  // РџСЂРѕРІРµСЂСЏРµРј, СЃРѕРґРµСЂР¶РёС‚ Р»Рё СЃРѕРѕР±С‰РµРЅРёРµ РѕР± РѕС€РёР±РєРµ РєР»СЋС‡РµРІС‹Рµ СЃР»РѕРІР°
+  // Проверяем, содержит ли сообщение об ошибке ключевые слова
   if (errorCode && errorCode.includes('permission')) {
-    return 'РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РїСЂР°РІ РґРѕСЃС‚СѓРїР°. РџСЂРѕРІРµСЂСЊС‚Рµ РїСЂР°РІРёР»Р° Firestore РІ Firebase Console';
+    return 'Недостаточно прав доступа. Проверьте правила Firestore в Firebase Console';
   }
 
-  return errorMessages[errorCode] || `РџСЂРѕРёР·РѕС€Р»Р° РѕС€РёР±РєР°: ${errorCode || 'РќРµРёР·РІРµСЃС‚РЅР°СЏ РѕС€РёР±РєР°'}`;
+  return errorMessages[errorCode] || `Произошла ошибка: ${errorCode || 'Неизвестная ошибка'}`;
 };
 

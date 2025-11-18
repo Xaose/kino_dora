@@ -4,7 +4,7 @@ import { getAuth } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 import { getAnalytics } from 'firebase/analytics';
 
-// РљРѕРЅС„РёРіСѓСЂР°С†РёСЏ Firebase Р±РµСЂС‘С‚СЃСЏ РёР· .env
+// Конфигурация Firebase берётся из .env
 const firebaseConfig = {
   apiKey: "AIzaSyBhfy8kJNuxV-WRgTi7wFIUrLwc4F7mKG8",
   authDomain: "kinodora-f17a8.firebaseapp.com",
@@ -17,7 +17,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// Analytics РґРѕСЃС‚СѓРїРµРЅ С‚РѕР»СЊРєРѕ РІ Р±СЂР°СѓР·РµСЂРµ
+// Analytics доступен только в браузере
 if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
   getAnalytics(app);
 }

@@ -16,7 +16,7 @@ export function useDoramas() {
           setDoramas(data);
         }
       } catch (err) {
-        console.error('РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ РґРѕСЂР°Рј:', err);
+        console.error('Ошибка получения дорам:', err);
         if (isMounted) setError(err);
       } finally {
         if (isMounted) setLoading(false);

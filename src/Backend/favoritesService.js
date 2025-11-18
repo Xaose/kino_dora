@@ -2,7 +2,7 @@
 import { db } from './firebaseConfig';
 
 /**
- * Р”РѕР±Р°РІРёС‚СЊ С„РёР»СЊРј РІ РёР·Р±СЂР°РЅРЅРѕРµ
+ * Добавить фильм в избранное
  */
 export const addToFavorites = async (userId, movieId) => {
   try {
@@ -12,22 +12,22 @@ export const addToFavorites = async (userId, movieId) => {
     if (!userDoc.exists()) {
       return {
         success: false,
-        error: 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ'
+        error: 'Пользователь не найден'
       };
     }
 
     const userData = userDoc.data();
     const favorites = userData.favorites || [];
 
-    // РџСЂРѕРІРµСЂСЏРµРј, РЅРµ РґРѕР±Р°РІР»РµРЅ Р»Рё СѓР¶Рµ С„РёР»СЊРј
+    // Проверяем, не добавлен ли Сѓже фильм
     if (favorites.includes(movieId)) {
       return {
         success: false,
-        error: 'Р¤РёР»СЊРј СѓР¶Рµ РІ РёР·Р±СЂР°РЅРЅРѕРј'
+        error: 'Фильм Сѓже в избранном'
       };
     }
 
-    // Р”РѕР±Р°РІР»СЏРµРј С„РёР»СЊРј РІ РёР·Р±СЂР°РЅРЅРѕРµ
+    // Добавляем фильм в избранное
     await updateDoc(userDocRef, {
       favorites: arrayUnion(movieId),
       updatedAt: new Date().toISOString()
@@ -35,10 +35,10 @@ export const addToFavorites = async (userId, movieId) => {
 
     return {
       success: true,
-      message: 'Р¤РёР»СЊРј РґРѕР±Р°РІР»РµРЅ РІ РёР·Р±СЂР°РЅРЅРѕРµ'
+      message: 'Фильм добавлен в избранное'
     };
   } catch (error) {
-    console.error('РћС€РёР±РєР° РґРѕР±Р°РІР»РµРЅРёСЏ РІ РёР·Р±СЂР°РЅРЅРѕРµ:', error);
+    console.error('Ошибка добавления в избранное:', error);
     return {
       success: false,
       error: error.message
@@ -47,7 +47,7 @@ export const addToFavorites = async (userId, movieId) => {
 };
 
 /**
- * РЈРґР°Р»РёС‚СЊ С„РёР»СЊРј РёР· РёР·Р±СЂР°РЅРЅРѕРіРѕ
+ * Удалить фильм из избранного
  */
 export const removeFromFavorites = async (userId, movieId) => {
   try {
@@ -57,11 +57,11 @@ export const removeFromFavorites = async (userId, movieId) => {
     if (!userDoc.exists()) {
       return {
         success: false,
-        error: 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ'
+        error: 'Пользователь не найден'
       };
     }
 
-    // РЈРґР°Р»СЏРµРј С„РёР»СЊРј РёР· РёР·Р±СЂР°РЅРЅРѕРіРѕ
+    // Удаляем фильм из избранного
     await updateDoc(userDocRef, {
       favorites: arrayRemove(movieId),
       updatedAt: new Date().toISOString()
@@ -69,10 +69,10 @@ export const removeFromFavorites = async (userId, movieId) => {
 
     return {
       success: true,
-      message: 'Р¤РёР»СЊРј СѓРґР°Р»РµРЅ РёР· РёР·Р±СЂР°РЅРЅРѕРіРѕ'
+      message: 'Фильм удален из избранного'
     };
   } catch (error) {
-    console.error('РћС€РёР±РєР° СѓРґР°Р»РµРЅРёСЏ РёР· РёР·Р±СЂР°РЅРЅРѕРіРѕ:', error);
+    console.error('Ошибка удаления из избранного:', error);
     return {
       success: false,
       error: error.message
@@ -81,7 +81,7 @@ export const removeFromFavorites = async (userId, movieId) => {
 };
 
 /**
- * РџСЂРѕРІРµСЂРёС‚СЊ, РЅР°С…РѕРґРёС‚СЃСЏ Р»Рё С„РёР»СЊРј РІ РёР·Р±СЂР°РЅРЅРѕРј
+ * Проверить, находится ли фильм в избранном
  */
 export const isFavorite = async (userId, movieId) => {
   try {
@@ -97,13 +97,13 @@ export const isFavorite = async (userId, movieId) => {
     
     return favorites.includes(movieId);
   } catch (error) {
-    console.error('РћС€РёР±РєР° РїСЂРѕРІРµСЂРєРё РёР·Р±СЂР°РЅРЅРѕРіРѕ:', error);
+    console.error('Ошибка проверки избранного:', error);
     return false;
   }
 };
 
 /**
- * РџРѕР»СѓС‡РёС‚СЊ РІСЃРµ РёР·Р±СЂР°РЅРЅС‹Рµ С„РёР»СЊРјС‹ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+ * Получить все избранные фильмы пользователя
  */
 export const getFavorites = async (userId) => {
   try {
@@ -113,7 +113,7 @@ export const getFavorites = async (userId) => {
     if (!userDoc.exists()) {
       return {
         success: false,
-        error: 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ',
+        error: 'Пользователь не найден',
         favorites: []
       };
     }
@@ -126,7 +126,7 @@ export const getFavorites = async (userId) => {
       favorites
     };
   } catch (error) {
-    console.error('РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ РёР·Р±СЂР°РЅРЅРѕРіРѕ:', error);
+    console.error('Ошибка получения избранного:', error);
     return {
       success: false,
       error: error.message,

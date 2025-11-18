@@ -3,8 +3,8 @@ import { uploadMovieVideo, uploadMoviePoster } from '../../Backend/storageServic
 import './VideoUploader.css';
 
 /**
- * РљРѕРјРїРѕРЅРµРЅС‚ РґР»СЏ Р·Р°РіСЂСѓР·РєРё РІРёРґРµРѕ Рё РїРѕСЃС‚РµСЂРѕРІ РІ Firebase Storage
- * РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РІ Р°РґРјРёРЅ-РїР°РЅРµР»Рё РґР»СЏ РґРѕР±Р°РІР»РµРЅРёСЏ РєРѕРЅС‚РµРЅС‚Р°
+ * Компонент для загрузки видео и постеров в Firebase Storage
+ * Используется в админ-панели для добавления контента
  */
 function VideoUploader({ movieId, onVideoUploaded, onPosterUploaded }) {
   const [videoFile, setVideoFile] = useState(null);
@@ -20,7 +20,7 @@ function VideoUploader({ movieId, onVideoUploaded, onPosterUploaded }) {
     const file = e.target.files[0];
     if (file) {
       if (!file.type.startsWith('video/')) {
-        setError('Р’С‹Р±РµСЂРёС‚Рµ РІРёРґРµРѕ С„Р°Р№Р»');
+        setError('Выберите видео файл');
         return;
       }
       setVideoFile(file);
@@ -32,7 +32,7 @@ function VideoUploader({ movieId, onVideoUploaded, onPosterUploaded }) {
     const file = e.target.files[0];
     if (file) {
       if (!file.type.startsWith('image/')) {
-        setError('Р’С‹Р±РµСЂРёС‚Рµ РёР·РѕР±СЂР°Р¶РµРЅРёРµ');
+        setError('Выберите изображение');
         return;
       }
       setPosterFile(file);
@@ -42,7 +42,7 @@ function VideoUploader({ movieId, onVideoUploaded, onPosterUploaded }) {
 
   const handleVideoUpload = async () => {
     if (!videoFile || !movieId) {
-      setError('Р’С‹Р±РµСЂРёС‚Рµ РІРёРґРµРѕ С„Р°Р№Р» Рё СѓРєР°Р¶РёС‚Рµ ID С„РёР»СЊРјР°');
+      setError('Выберите видео файл и укажите ID фильма');
       return;
     }
 
@@ -64,7 +64,7 @@ function VideoUploader({ movieId, onVideoUploaded, onPosterUploaded }) {
         onVideoUploaded(url);
       }
     } catch (err) {
-      setError(`РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РІРёРґРµРѕ: ${err.message}`);
+      setError(`Ошибка загрузки видео: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -72,7 +72,7 @@ function VideoUploader({ movieId, onVideoUploaded, onPosterUploaded }) {
 
   const handlePosterUpload = async () => {
     if (!posterFile || !movieId) {
-      setError('Р’С‹Р±РµСЂРёС‚Рµ РёР·РѕР±СЂР°Р¶РµРЅРёРµ Рё СѓРєР°Р¶РёС‚Рµ ID С„РёР»СЊРјР°');
+      setError('Выберите изображение и укажите ID фильма');
       return;
     }
 
@@ -94,7 +94,7 @@ function VideoUploader({ movieId, onVideoUploaded, onPosterUploaded }) {
         onPosterUploaded(url);
       }
     } catch (err) {
-      setError(`РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РїРѕСЃС‚РµСЂР°: ${err.message}`);
+      setError(`Ошибка загрузки постера: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -110,13 +110,13 @@ function VideoUploader({ movieId, onVideoUploaded, onPosterUploaded }) {
 
   return (
     <div className="video-uploader">
-      <h3>Р—Р°РіСЂСѓР·РєР° РєРѕРЅС‚РµРЅС‚Р° РґР»СЏ С„РёР»СЊРјР°: {movieId || 'РќРµ СѓРєР°Р·Р°РЅ'}</h3>
+      <h3>Загрузка контента для фильма: {movieId || 'Не указан'}</h3>
       
       {error && <div className="upload-error">{error}</div>}
 
-      {/* Р—Р°РіСЂСѓР·РєР° РІРёРґРµРѕ */}
+      {/* Загрузка видео */}
       <div className="upload-section">
-        <h4>Р’РёРґРµРѕ</h4>
+        <h4>Видео</h4>
         <div className="upload-controls">
           <input
             type="file"
@@ -136,7 +136,7 @@ function VideoUploader({ movieId, onVideoUploaded, onPosterUploaded }) {
             disabled={!videoFile || loading || !movieId}
             className="upload-button"
           >
-            Р—Р°РіСЂСѓР·РёС‚СЊ РІРёРґРµРѕ
+            Загрузить видео
           </button>
         </div>
         {videoProgress > 0 && videoProgress < 100 && (
@@ -151,7 +151,7 @@ function VideoUploader({ movieId, onVideoUploaded, onPosterUploaded }) {
         )}
         {videoUrl && (
           <div className="upload-success">
-            <p>Р’РёРґРµРѕ Р·Р°РіСЂСѓР¶РµРЅРѕ!</p>
+            <p>Видео загружено!</p>
             <input
               type="text"
               value={videoUrl}
@@ -163,9 +163,9 @@ function VideoUploader({ movieId, onVideoUploaded, onPosterUploaded }) {
         )}
       </div>
 
-      {/* Р—Р°РіСЂСѓР·РєР° РїРѕСЃС‚РµСЂР° */}
+      {/* Загрузка постера */}
       <div className="upload-section">
-        <h4>РџРѕСЃС‚РµСЂ</h4>
+        <h4>Постер</h4>
         <div className="upload-controls">
           <input
             type="file"
@@ -185,7 +185,7 @@ function VideoUploader({ movieId, onVideoUploaded, onPosterUploaded }) {
             disabled={!posterFile || loading || !movieId}
             className="upload-button"
           >
-            Р—Р°РіСЂСѓР·РёС‚СЊ РїРѕСЃС‚РµСЂ
+            Загрузить постер
           </button>
         </div>
         {posterProgress > 0 && posterProgress < 100 && (
@@ -200,7 +200,7 @@ function VideoUploader({ movieId, onVideoUploaded, onPosterUploaded }) {
         )}
         {posterUrl && (
           <div className="upload-success">
-            <p>РџРѕСЃС‚РµСЂ Р·Р°РіСЂСѓР¶РµРЅ!</p>
+            <p>Постер загружен!</p>
             <input
               type="text"
               value={posterUrl}

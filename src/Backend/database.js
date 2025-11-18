@@ -22,7 +22,7 @@ const ensureArray = (value) => {
 
 const normalizeMovieDocument = (doc) => ({
   id: doc.id,
-  title: doc.name || doc.title || 'Р‘РµР· РЅР°Р·РІР°РЅРёСЏ',
+  title: doc.name || doc.title || 'Без названия',
   description: doc.description || '',
   director: doc.director || '',
   genres: ensureArray(doc.genre),
@@ -53,10 +53,10 @@ const serializeMovieData = (data = {}) => ({
 });
 
 /**
- * Р‘Р°Р·РѕРІС‹Рµ РѕРїРµСЂР°С†РёРё СЃ Р±Р°Р·РѕР№ РґР°РЅРЅС‹С… Firestore
+ * Базовые операции с базой данных Firestore
  */
 
-// РџРѕР»СѓС‡РёС‚СЊ РІСЃРµ РґРѕРєСѓРјРµРЅС‚С‹ РёР· РєРѕР»Р»РµРєС†РёРё
+// Получить все документы из коллекции
 export const getAllDocuments = async (collectionName) => {
   try {
     const collectionRef = collection(db, collectionName);
@@ -72,12 +72,12 @@ export const getAllDocuments = async (collectionName) => {
     
     return documents;
   } catch (error) {
-    console.error(`РћС€РёР±РєР° РїСЂРё РїРѕР»СѓС‡РµРЅРёРё РґРѕРєСѓРјРµРЅС‚РѕРІ РёР· ${collectionName}:`, error);
+    console.error(`Ошибка при получении документов из ${collectionName}:`, error);
     throw error;
   }
 };
 
-// РџРѕР»СѓС‡РёС‚СЊ РѕРґРёРЅ РґРѕРєСѓРјРµРЅС‚ РїРѕ ID
+// Получить один документ по ID
 export const getDocumentById = async (collectionName, documentId) => {
   try {
     const docRef = doc(db, collectionName, documentId);
@@ -89,15 +89,15 @@ export const getDocumentById = async (collectionName, documentId) => {
         ...docSnap.data()
       };
     } else {
-      throw new Error(`Р”РѕРєСѓРјРµРЅС‚ СЃ ID ${documentId} РЅРµ РЅР°Р№РґРµРЅ`);
+      throw new Error(`Документ с ID ${documentId} не найден`);
     }
   } catch (error) {
-    console.error(`РћС€РёР±РєР° РїСЂРё РїРѕР»СѓС‡РµРЅРёРё РґРѕРєСѓРјРµРЅС‚Р° ${documentId}:`, error);
+    console.error(`Ошибка при получении документа ${documentId}:`, error);
     throw error;
   }
 };
 
-// Р”РѕР±Р°РІРёС‚СЊ РЅРѕРІС‹Р№ РґРѕРєСѓРјРµРЅС‚
+// Добавить новый документ
 export const addDocument = async (collectionName, data) => {
   try {
     const collectionRef = collection(db, collectionName);
@@ -109,12 +109,12 @@ export const addDocument = async (collectionName, data) => {
     
     return docRef.id;
   } catch (error) {
-    console.error(`РћС€РёР±РєР° РїСЂРё РґРѕР±Р°РІР»РµРЅРёРё РґРѕРєСѓРјРµРЅС‚Р° РІ ${collectionName}:`, error);
+    console.error(`Ошибка при добавлении документа в ${collectionName}:`, error);
     throw error;
   }
 };
 
-// РћР±РЅРѕРІРёС‚СЊ РґРѕРєСѓРјРµРЅС‚
+// Обновить документ
 export const updateDocument = async (collectionName, documentId, data) => {
   try {
     const docRef = doc(db, collectionName, documentId);
@@ -125,12 +125,12 @@ export const updateDocument = async (collectionName, documentId, data) => {
     
     return true;
   } catch (error) {
-    console.error(`РћС€РёР±РєР° РїСЂРё РѕР±РЅРѕРІР»РµРЅРёРё РґРѕРєСѓРјРµРЅС‚Р° ${documentId}:`, error);
+    console.error(`Ошибка при обновлении документа ${documentId}:`, error);
     throw error;
   }
 };
 
-// РЈРґР°Р»РёС‚СЊ РґРѕРєСѓРјРµРЅС‚
+// Удалить документ
 export const deleteDocument = async (collectionName, documentId) => {
   try {
     const docRef = doc(db, collectionName, documentId);
@@ -138,12 +138,12 @@ export const deleteDocument = async (collectionName, documentId) => {
     
     return true;
   } catch (error) {
-    console.error(`РћС€РёР±РєР° РїСЂРё СѓРґР°Р»РµРЅРёРё РґРѕРєСѓРјРµРЅС‚Р° ${documentId}:`, error);
+    console.error(`Ошибка при удалении документа ${documentId}:`, error);
     throw error;
   }
 };
 
-// РџРѕР»СѓС‡РёС‚СЊ РґРѕРєСѓРјРµРЅС‚С‹ СЃ С„РёР»СЊС‚СЂР°С†РёРµР№
+// Получить документы с фильтрацией
 export const getDocumentsWithFilter = async (collectionName, filterField, filterValue, comparison = '==') => {
   try {
     const collectionRef = collection(db, collectionName);
@@ -160,12 +160,12 @@ export const getDocumentsWithFilter = async (collectionName, filterField, filter
     
     return documents;
   } catch (error) {
-    console.error(`РћС€РёР±РєР° РїСЂРё С„РёР»СЊС‚СЂР°С†РёРё РґРѕРєСѓРјРµРЅС‚РѕРІ:`, error);
+    console.error(`Ошибка при фильтрации документов:`, error);
     throw error;
   }
 };
 
-// РџРѕР»СѓС‡РёС‚СЊ РґРѕРєСѓРјРµРЅС‚С‹ СЃ СЃРѕСЂС‚РёСЂРѕРІРєРѕР№
+// Получить документы с сортировкой
 export const getDocumentsOrdered = async (collectionName, orderField, orderDirection = 'asc', limitCount = null) => {
   try {
     const collectionRef = collection(db, collectionName);
@@ -187,14 +187,14 @@ export const getDocumentsOrdered = async (collectionName, orderField, orderDirec
     
     return documents;
   } catch (error) {
-    console.error(`РћС€РёР±РєР° РїСЂРё РїРѕР»СѓС‡РµРЅРёРё РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹С… РґРѕРєСѓРјРµРЅС‚РѕРІ:`, error);
+    console.error(`Ошибка при получении отсортированных документов:`, error);
     throw error;
   }
 };
 
-// РџСЂРёРјРµСЂС‹ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ РґР»СЏ РІР°С€РµРіРѕ РїСЂРѕРµРєС‚Р°:
+// Примеры использования для вашего проекта:
 
-// Р Р°Р±РѕС‚Р° СЃ С„РёР»СЊРјР°РјРё
+// Работа с фильмами
 export const moviesService = {
   getAll: async () => {
     const docs = await getAllDocuments('movies');
@@ -220,10 +220,10 @@ export const moviesService = {
   }
 };
 
-// РќРѕСЂРјР°Р»РёР·Р°С†РёСЏ РґРѕРєСѓРјРµРЅС‚Р° РґРѕСЂР°РјС‹
+// Нормализация документа дорамы
 const normalizeDoramaDocument = (doc) => ({
   id: doc.id,
-  title: doc.name || doc.title || 'Р‘РµР· РЅР°Р·РІР°РЅРёСЏ',
+  title: doc.name || doc.title || 'Без названия',
   description: doc.description || '',
   director: doc.director || '',
   genres: ensureArray(doc.genre),
@@ -240,7 +240,7 @@ const normalizeDoramaDocument = (doc) => ({
   episodes: doc.episodes || []
 });
 
-// РЎРµСЂРёР°Р»РёР·Р°С†РёСЏ РґР°РЅРЅС‹С… РґРѕСЂР°РјС‹
+// Сериализация данных дорамы
 const serializeDoramaData = (data = {}) => ({
   name: data.title ?? data.name ?? '',
   description: data.description ?? '',
@@ -258,7 +258,7 @@ const serializeDoramaData = (data = {}) => ({
   episodes: data.episodes || []
 });
 
-// Р Р°Р±РѕС‚Р° СЃ РґРѕСЂР°РјР°РјРё
+// Работа с дорамами
 export const doramasService = {
   getAll: async () => {
     const docs = await getAllDocuments('doramas');
@@ -280,10 +280,10 @@ export const doramasService = {
   getByGenre: (genre) => getDocumentsWithFilter('doramas', 'genre', genre, 'array-contains')
 };
 
-// РћР±СЂР°С‚РЅР°СЏ СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚СЊ (РјРѕР¶РЅРѕ СѓРґР°Р»РёС‚СЊ РїРѕР·Р¶Рµ)
+// Обратная совместимость (можно удалить позже)
 export const seriesService = doramasService;
 
-// Р Р°Р±РѕС‚Р° СЃ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏРјРё
+// Работа с пользователями
 export const usersService = {
   getAll: () => getAllDocuments('users'),
   getById: (id) => getDocumentById('users', id),

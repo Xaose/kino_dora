@@ -286,7 +286,7 @@
 }
 
 .filter-placeholder {
-  color: #393939;
+  color: #EBFAFF;
   font: 500 14px Lato, -apple-system, Roboto, Helvetica, sans-serif;
   white-space: nowrap;
 
@@ -349,11 +349,11 @@
   background: transparent;
   border: none;
   outline: none;
-  color: #393939;
+  color: #EBFAFF;
   font: 700 24px Lato, -apple-system, Roboto, Helvetica, sans-serif;
 
   &::placeholder {
-    color: #393939;
+    color: rgba(235, 250, 255, 0.6);
   }
 
   @media (max-width: 768px) {
