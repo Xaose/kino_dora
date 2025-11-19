@@ -27,10 +27,12 @@ import Pricing from './Pages/Pricing/Pricing';
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [selectedMovieId, setSelectedMovieId] = useState(null);
+  const [selectedMediaType, setSelectedMediaType] = useState('movie'); // 'movie' or 'dorama'
 
   const handleNavigate = (page, targetId, options = {}) => {
     if (options.movieId) {
       setSelectedMovieId(options.movieId);
+      setSelectedMediaType(options.type || 'movie');
     }
 
     const wasDifferentPage = currentPage !== page;
@@ -70,9 +72,6 @@ function App() {
           <>
             <Home onNavigate={handleNavigate} />
             <div className="gradient-section">
-              <FAQ />
-              <Studios />
-              <Footer />
             </div>
           </>
         );
@@ -83,9 +82,9 @@ function App() {
       case 'contact':
         return <Contact onNavigate={handleNavigate} />;
       case 'movieshow':
-        return <MovieShow onNavigate={handleNavigate} selectedMovieId={selectedMovieId} />;
+        return <MovieShow onNavigate={handleNavigate} selectedMovieId={selectedMovieId} mediaType={selectedMediaType} />;
       case 'playing':
-        return <Playing onNavigate={handleNavigate} selectedMovieId={selectedMovieId} />;
+        return <Playing onNavigate={handleNavigate} selectedMovieId={selectedMovieId} mediaType={selectedMediaType} />;
       case 'login':
         return <Login onNavigate={handleNavigate} />;
       case 'signup':

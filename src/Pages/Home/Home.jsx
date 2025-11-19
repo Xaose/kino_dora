@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import './Home.scss';
 import FAQ from '../../Components/FAQ/FAQ';
 import Studios from '../../Components/Studios/Studios';
@@ -64,6 +64,8 @@ function Home({ onNavigate }) {
   const [activeIndex, setActiveIndex] = useState(1);
   const [selectedMovieGenres, setSelectedMovieGenres] = useState(['Драма', 'Боевик', 'Фантастика', 'Триллер']);
   const [selectedSeriesGenres, setSelectedSeriesGenres] = useState(['Драма', 'Роман', 'Боевик']);
+  const movieGenresRef = useRef(null);
+  const doramaGenresRef = useRef(null);
   
   // Загрузка данных из Firebase
   const { movies, loading: moviesLoading } = useMovies();
@@ -234,6 +236,16 @@ function Home({ onNavigate }) {
     }
   };
 
+  const scrollGenres = (type, direction) => {
+    const ref = type === 'movies' ? movieGenresRef : doramaGenresRef;
+    if (!ref.current) return;
+    const amount = 220;
+    ref.current.scrollBy({
+      left: direction === 'left' ? -amount : amount,
+      behavior: 'smooth'
+    });
+  };
+
   return (
     <div className="home-page">
       <div className="hero-section">
@@ -382,7 +394,7 @@ function Home({ onNavigate }) {
       <section className="trending-section">
         <div className="section-header">
           <h2 className="section-title">Популярное</h2>
-          <button className="see-more-btn">
+          <button className="see-more-btn" onClick={() => onNavigate?.('movies')}>
             Больше
             <svg width="24" height="24" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M13.7407 19.8516L21.377 12.2231M21.377 12.2231L13.7485 4.58683M21.377 12.2231L3.05927 12.2138" stroke="#228EE5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -447,12 +459,12 @@ function Home({ onNavigate }) {
         </div>
         
         <div className="genres-section">
-          <button className="scroll-btn scroll-left">
+          <button className="scroll-btn scroll-left" onClick={() => scrollGenres('movies', 'left')}>
             <svg width="25" height="25" viewBox="0 0 25 25" fill="none">
               <path fillRule="evenodd" clipRule="evenodd" d="M12.2288 11.9476C11.9237 12.2527 11.9237 12.7473 12.2288 13.0524L20.0413 20.8649C20.3464 21.17 20.8411 21.17 21.1462 20.8649C21.4513 20.5598 21.4513 20.0652 21.1462 19.7601L13.8861 12.5L21.1462 5.23993C21.4513 4.93483 21.4513 4.44017 21.1462 4.13507C20.8411 3.82998 20.3464 3.82998 20.0413 4.13507L12.2288 11.9476Z" fill="#EBFAFF"/>
             </svg>
           </button>
-          <div className="genres-list">
+          <div className="genres-list" ref={movieGenresRef}>
             {genres.map(genre => (
               <button
                 key={genre}
@@ -463,7 +475,7 @@ function Home({ onNavigate }) {
               </button>
             ))}
           </div>
-          <button className="scroll-btn scroll-right">
+          <button className="scroll-btn scroll-right" onClick={() => scrollGenres('movies', 'right')}>
             <svg width="25" height="25" viewBox="0 0 25 25" fill="none">
               <path fillRule="evenodd" clipRule="evenodd" d="M16.9587 11.9476C17.2638 12.2527 17.2638 12.7473 16.9587 13.0524L9.14618 20.8649C8.84108 21.17 8.34642 21.17 8.04132 20.8649C7.73623 20.5598 7.73623 20.0652 8.04132 19.7601L15.3014 12.5L8.04132 5.23993C7.73623 4.93483 7.73623 4.44017 8.04132 4.13507C8.34642 3.82998 8.84108 3.82998 9.14618 4.13507L16.9587 11.9476Z" fill="#EBFAFF"/>
             </svg>
@@ -502,7 +514,7 @@ function Home({ onNavigate }) {
         <div className="section-backdrop"></div>
         <div className="section-header">
           <h2 className="section-title">Дорамы</h2>
-          <button className="see-more-btn">
+          <button className="see-more-btn" onClick={() => onNavigate?.('serials')}>
             Больше
             <svg width="24" height="24" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M13.7407 19.8514L21.377 12.2229M21.377 12.2229L13.7485 4.5867M21.377 12.2229L3.05927 12.2137" stroke="#228EE5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -511,12 +523,12 @@ function Home({ onNavigate }) {
         </div>
         
         <div className="genres-section">
-          <button className="scroll-btn scroll-left">
+          <button className="scroll-btn scroll-left" onClick={() => scrollGenres('series', 'left')}>
             <svg width="25" height="25" viewBox="0 0 25 25" fill="none">
               <path fillRule="evenodd" clipRule="evenodd" d="M12.2288 11.9476C11.9237 12.2527 11.9237 12.7473 12.2288 13.0524L20.0413 20.8649C20.3464 21.17 20.8411 21.17 21.1462 20.8649C21.4513 20.5598 21.4513 20.0652 21.1462 19.7601L13.8861 12.5L21.1462 5.23993C21.4513 4.93483 21.4513 4.44017 21.1462 4.13507C20.8411 3.82998 20.3464 3.82998 20.0413 4.13507L12.2288 11.9476Z" fill="#EBFAFF"/>
             </svg>
           </button>
-          <div className="genres-list">
+          <div className="genres-list" ref={doramaGenresRef}>
             {genres.map(genre => (
               <button
                 key={genre}
@@ -527,7 +539,7 @@ function Home({ onNavigate }) {
               </button>
             ))}
           </div>
-          <button className="scroll-btn scroll-right">
+          <button className="scroll-btn scroll-right" onClick={() => scrollGenres('series', 'right')}>
             <svg width="25" height="25" viewBox="0 0 25 25" fill="none">
               <path fillRule="evenodd" clipRule="evenodd" d="M16.9587 11.9476C17.2638 12.2527 17.2638 12.7473 16.9587 13.0524L9.14618 20.8649C8.84108 21.17 8.34642 21.17 8.04132 20.8649C7.73623 20.5598 7.73623 20.0652 8.04132 19.7601L15.3014 12.5L8.04132 5.23993C7.73623 4.93483 7.73623 4.44017 8.04132 4.13507C8.34642 3.82998 8.84108 3.82998 9.14618 4.13507L16.9587 11.9476Z" fill="#EBFAFF"/>
             </svg>

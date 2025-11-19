@@ -283,6 +283,62 @@ export const doramasService = {
 // Обратная совместимость (можно удалить позже)
 export const seriesService = doramasService;
 
+const normalizeCommentDocument = (doc) => ({
+  id: doc.id,
+  movieId: doc.movieId,
+  mediaType: doc.mediaType || 'movie',
+  movieKey: doc.movieKey,
+  userId: doc.userId,
+  userName: doc.userName || 'Пользователь',
+  text: doc.text || '',
+  createdAt: doc.createdAt?.toDate ? doc.createdAt.toDate() : doc.createdAt,
+  updatedAt: doc.updatedAt?.toDate ? doc.updatedAt.toDate() : doc.updatedAt
+});
+
+export const commentsService = {
+  getByMovie: async (movieId, mediaType = 'movie') => {
+    try {
+      const movieKey = `${mediaType}:${movieId}`;
+      const collectionRef = collection(db, 'comments');
+      const commentsQuery = query(
+        collectionRef,
+        where('movieKey', '==', movieKey),
+        orderBy('createdAt', 'desc')
+      );
+      const snapshot = await getDocs(commentsQuery);
+
+      const comments = [];
+      snapshot.forEach((docSnap) => {
+        comments.push(normalizeCommentDocument({ id: docSnap.id, ...docSnap.data() }));
+      });
+
+      return comments;
+    } catch (error) {
+      console.error('Ошибка при загрузке комментариев:', error);
+      throw error;
+    }
+  },
+  add: async ({ movieId, mediaType = 'movie', userId, userName, text }) => {
+    try {
+      const payload = {
+        movieId,
+        mediaType,
+        movieKey: `${mediaType}:${movieId}`,
+        userId,
+        userName,
+        text,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      };
+      const docRef = await addDoc(collection(db, 'comments'), payload);
+      return normalizeCommentDocument({ id: docRef.id, ...payload });
+    } catch (error) {
+      console.error('Ошибка при добавлении комментария:', error);
+      throw error;
+    }
+  }
+};
+
 // Работа с пользователями
 export const usersService = {
   getAll: () => getAllDocuments('users'),

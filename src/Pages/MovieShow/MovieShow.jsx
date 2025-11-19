@@ -1,12 +1,21 @@
-﻿import React from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import './MovieShow.css';
 import Footer from '../../Components/Footer/Footer';
-import { useMovie } from '../../hooks/useMovie';
+import { useMedia } from '../../hooks/useMedia';
 import { POSTER_PLACEHOLDER } from '../../constants/placeholders';
+import { commentsService } from '../../Backend/database';
+import { getCurrentUser, onAuthStateChange } from '../../Backend/authService';
 
-function MovieShow({ onNavigate, selectedMovieId }) {
-  const { movie, loading, error } = useMovie(selectedMovieId);
+function MovieShow({ onNavigate, selectedMovieId, mediaType = 'movie' }) {
+  const { movie, loading, error } = useMedia(selectedMovieId, mediaType);
   const poster = movie?.posterUrl || POSTER_PLACEHOLDER;
+  const [comments, setComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentsError, setCommentsError] = useState('');
+  const [commentText, setCommentText] = useState('');
+  const [commentSubmitError, setCommentSubmitError] = useState('');
+  const [isSendingComment, setIsSendingComment] = useState(false);
+  const [currentUser, setCurrentUser] = useState(() => getCurrentUser());
 
   const formatNumber = (value) => {
     if (value === null || value === undefined || value === '') return null;
@@ -15,14 +24,47 @@ function MovieShow({ onNavigate, selectedMovieId }) {
     return numberValue.toLocaleString('ru-RU');
   };
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChange((user) => {
+      setCurrentUser(user || null);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!movie?.id) {
+      setComments([]);
+      return;
+    }
+    const loadComments = async () => {
+      setCommentsLoading(true);
+      setCommentsError('');
+      try {
+        const result = await commentsService.getByMovie(movie.id, mediaType);
+        setComments(result);
+      } catch (err) {
+        console.error('Ошибка загрузки комментариев:', err);
+        setCommentsError('Не удалось загрузить комментарии');
+      } finally {
+        setCommentsLoading(false);
+      }
+    };
+
+    loadComments();
+  }, [movie?.id, mediaType]);
+
   const handleWatch = () => {
     if (onNavigate && movie?.id) {
-      onNavigate('playing', null, { movieId: movie.id });
+      onNavigate('playing', null, { movieId: movie.id, type: mediaType });
     }
   };
 
   const handleBackToMovies = () => {
-    onNavigate?.('movies');
+    if (mediaType === 'dorama') {
+      onNavigate?.('serials');
+    } else {
+      onNavigate?.('movies');
+    }
   };
 
   const infoItems = [
@@ -32,21 +74,73 @@ function MovieShow({ onNavigate, selectedMovieId }) {
     movie?.budget && `${formatNumber(movie.budget)} $`
   ].filter(Boolean).join(' • ');
 
+  const handleSubmitComment = async (event) => {
+    event.preventDefault();
+    if (!movie?.id) return;
+
+    if (!currentUser) {
+      setCommentSubmitError('Войдите в аккаунт, чтобы оставлять комментарии');
+      return;
+    }
+
+    const text = commentText.trim();
+    if (!text) {
+      setCommentSubmitError('Комментарий не может быть пустым');
+      return;
+    }
+
+    try {
+      setIsSendingComment(true);
+      setCommentSubmitError('');
+      const displayName =
+        currentUser.name ||
+        currentUser.username ||
+        currentUser.displayName ||
+        currentUser.email?.split('@')[0] ||
+        'Пользователь';
+
+      const newComment = await commentsService.add({
+        movieId: movie.id,
+        mediaType,
+        userId: currentUser.uid,
+        userName: displayName,
+        text
+      });
+
+      setComments((prev) => [newComment, ...prev]);
+      setCommentText('');
+    } catch (err) {
+      console.error('Ошибка отправки комментария:', err);
+      setCommentSubmitError('Не удалось отправить комментарий. Попробуйте позже.');
+    } finally {
+      setIsSendingComment(false);
+    }
+  };
+
+  const formatCommentDate = (dateValue) => {
+    if (!dateValue) return '';
+    const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+    return new Intl.DateTimeFormat('ru-RU', {
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    }).format(date);
+  };
+
   return (
     <div className="movie-show-page">
       {loading && (
-        <div className="movie-state">Загружаем данные фильма...</div>
+        <div className="movie-state">Загружаем данные {mediaType === 'dorama' ? 'дорамы' : 'фильма'}...</div>
       )}
 
       {!loading && error && (
         <div className="movie-state error">
-          Не удалось загрузить фильм. <button onClick={handleBackToMovies}>Вернуться к списку</button>
+          Не удалось загрузить {mediaType === 'dorama' ? 'дораму' : 'фильм'}. <button onClick={handleBackToMovies}>Вернуться к списку</button>
         </div>
       )}
 
       {!loading && !movie && !error && (
         <div className="movie-state">
-          Фильм не выбран. <button onClick={handleBackToMovies}>Открыть каталог</button>
+          {mediaType === 'dorama' ? 'Дорама' : 'Фильм'} не выбран. <button onClick={handleBackToMovies}>Открыть каталог</button>
         </div>
       )}
 
@@ -105,7 +199,7 @@ function MovieShow({ onNavigate, selectedMovieId }) {
           <section className="v2about-section">
             <h2 className="v2section-title">Описание</h2>
             <p className="v2about-text">
-              {movie.description || 'Добавьте описание фильма в базе данных, чтобы увидеть его здесь.'}
+              {movie.description || `Добавьте описание ${mediaType === 'dorama' ? 'дорамы' : 'фильма'} в базе данных, чтобы увидеть его здесь.`}
             </p>
           </section>
 
@@ -147,6 +241,50 @@ function MovieShow({ onNavigate, selectedMovieId }) {
                 <strong className="v2info-value">{movie.runtime || '—'}</strong>
               </div>
             </div>
+          </section>
+
+          <section className="v2comments-section">
+            <h2 className="v2section-title-medium">Комментарии</h2>
+            {currentUser ? (
+              <form className="comment-form" onSubmit={handleSubmitComment}>
+                <textarea
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder="Поделитесь впечатлениями о фильме"
+                />
+                <div className="comment-form-actions">
+                  {commentSubmitError && <span className="comment-error">{commentSubmitError}</span>}
+                  <button type="submit" disabled={isSendingComment || !commentText.trim()}>
+                    {isSendingComment ? 'Отправка...' : 'Отправить'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="comment-auth-hint">
+                Войдите в профиль, чтобы оставлять комментарии.
+              </div>
+            )}
+
+            {commentsLoading && <div className="comment-state">Загружаем комментарии...</div>}
+            {!commentsLoading && commentsError && (
+              <div className="comment-state comment-error">{commentsError}</div>
+            )}
+            {!commentsLoading && !commentsError && comments.length === 0 && (
+              <div className="comment-state">Пока нет ни одного комментария. Будьте первым!</div>
+            )}
+            {!commentsLoading && comments.length > 0 && (
+              <ul className="comments-list">
+                {comments.map((comment) => (
+                  <li className="comment-card" key={comment.id}>
+                    <div className="comment-card-header">
+                      <strong>{comment.userName}</strong>
+                      <span>{formatCommentDate(comment.createdAt)}</span>
+                    </div>
+                    <p>{comment.text}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
         </>
       )}

@@ -1,5 +1,7 @@
 :root {
   --header-height: 120px;
+  --color-bg-primary: #030A1B;
+  --color-text-primary: #f3f7ff;
 }
 
 * {

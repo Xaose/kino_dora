@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect } from 'react';
+﻿import { useState, useRef, useEffect, useMemo } from 'react';
 import './VideoPlayer.css';
 
 // Функция для определения YouTube URL и извлечения video ID
@@ -25,6 +25,66 @@ const isYouTubeUrl = (url) => {
   return getYouTubeVideoId(url) !== null;
 };
 
+// Загрузка YouTube IFrame API
+const loadYouTubeAPI = () => {
+  return new Promise((resolve, reject) => {
+    if (window.YT && window.YT.Player) {
+      resolve();
+      return;
+    }
+    
+    // Проверяем, не загружается ли уже API
+    if (window.onYouTubeIframeAPIReady) {
+      const originalCallback = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => {
+        originalCallback();
+        resolve();
+      };
+      return;
+    }
+    
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    tag.async = true;
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    
+    // Таймаут на случай, если API не загрузится
+    const timeout = setTimeout(() => {
+      reject(new Error('YouTube API не загрузился'));
+    }, 10000);
+    
+    window.onYouTubeIframeAPIReady = () => {
+      clearTimeout(timeout);
+      resolve();
+    };
+    
+    tag.onerror = () => {
+      clearTimeout(timeout);
+      reject(new Error('Ошибка загрузки YouTube API'));
+    };
+  });
+};
+
+const QUALITY_OPTIONS = [
+  { value: 'hd1080', label: '1080p HD' },
+  { value: 'hd720', label: '720p HD' },
+  { value: 'large', label: '480p SD' },
+  { value: 'medium', label: '360p' },
+  { value: 'small', label: '240p' },
+  { value: 'auto', label: 'Авто' }
+];
+
+const QUALITY_LABELS = {
+  hd1080: '1080p',
+  hd720: '720p',
+  large: '480p',
+  medium: '360p',
+  small: '240p',
+  auto: 'Авто',
+  default: 'Авто'
+};
+
 function VideoPlayer({ videoUrl, title, onBack, poster }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(true);
@@ -35,17 +95,173 @@ function VideoPlayer({ videoUrl, title, onBack, poster }) {
   const [showPreview, setShowPreview] = useState(false);
   const [previewPosition, setPreviewPosition] = useState(0);
   const [previewTime, setPreviewTime] = useState(0);
+  const [youtubePlayer, setYoutubePlayer] = useState(null);
+  const [youtubeReady, setYoutubeReady] = useState(false);
+  const [playbackQuality, setPlaybackQuality] = useState('hd1080');
+  const [availableQualities, setAvailableQualities] = useState(['auto']);
   
   const videoRef = useRef(null);
   const playerRef = useRef(null);
+  const youtubePlayerRef = useRef(null);
   const controlsTimeoutRef = useRef(null);
   const progressBarRef = useRef(null);
+  const youtubeIntervalRef = useRef(null);
+  const qualityRetryTimeoutRef = useRef(null);
+  const desiredQualityRef = useRef('hd1080');
   
   const isYouTube = isYouTubeUrl(videoUrl);
   const youtubeVideoId = isYouTube ? getYouTubeVideoId(videoUrl) : null;
-  const youtubeEmbedUrl = youtubeVideoId 
-    ? `https://www.youtube.com/embed/${youtubeVideoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`
-    : null;
+
+  const qualityLabel = useMemo(() => {
+    return QUALITY_LABELS[playbackQuality] || QUALITY_LABELS.default;
+  }, [playbackQuality]);
+
+  const updateAvailableQualities = (playerInstance) => {
+    if (!playerInstance || typeof playerInstance.getAvailableQualityLevels !== 'function') return;
+    try {
+      const levels = playerInstance.getAvailableQualityLevels() || [];
+      const normalizedLevels = Array.from(new Set(['auto', ...levels]));
+      setAvailableQualities((prev) => {
+        if (prev.length === normalizedLevels.length && prev.every((level, index) => level === normalizedLevels[index])) {
+          return prev;
+        }
+        return normalizedLevels;
+      });
+    } catch (e) {
+      console.error('Ошибка получения списка качеств:', e);
+    }
+  };
+
+  // Инициализация YouTube IFrame API
+  useEffect(() => {
+    if (!isYouTube || !youtubeVideoId) return;
+
+    let playerInstance = null;
+
+    const initYouTubePlayer = async () => {
+      try {
+        await loadYouTubeAPI();
+        
+        // Небольшая задержка, чтобы убедиться, что контейнер готов
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        if (!youtubePlayerRef.current) {
+          console.error('YouTube контейнер не найден');
+          return;
+        }
+
+        playerInstance = new window.YT.Player(youtubePlayerRef.current, {
+          videoId: youtubeVideoId,
+          playerVars: {
+            autoplay: 1,
+            controls: 0,
+            disablekb: 0,
+            enablejsapi: 1,
+            fs: 1,
+            iv_load_policy: 3,
+            modestbranding: 1,
+            playsinline: 1,
+            rel: 0,
+            showinfo: 0,
+            vq: 'hd1080', // Высокое качество по умолчанию
+          },
+          events: {
+            onReady: (event) => {
+              const player = event.target;
+              setYoutubePlayer(player);
+              setYoutubeReady(true);
+              updateAvailableQualities(player);
+              try {
+                const duration = player.getDuration();
+                if (duration) {
+                  setDuration(duration);
+                }
+              } catch (e) {
+                console.error('Ошибка получения длительности:', e);
+              }
+              setIsPlaying(true);
+              try {
+                player.setPlaybackQuality('hd1080');
+                desiredQualityRef.current = 'hd1080';
+              } catch (e) {
+                console.error('Ошибка установки качества:', e);
+              }
+            },
+            onStateChange: (event) => {
+              // YT.PlayerState.PLAYING = 1
+              // YT.PlayerState.PAUSED = 2
+              // YT.PlayerState.ENDED = 0
+              if (event.data === 1) {
+                setIsPlaying(true);
+              } else if (event.data === 2 || event.data === 0) {
+                setIsPlaying(false);
+              }
+              updateAvailableQualities(event.target);
+            },
+            onPlaybackQualityChange: (event) => {
+              if (desiredQualityRef.current === 'auto') {
+                setPlaybackQuality('auto');
+              } else {
+                setPlaybackQuality(event.data);
+              }
+            },
+            onError: (event) => {
+              console.error('Ошибка YouTube плеера:', event.data);
+            },
+          },
+        });
+      } catch (error) {
+        console.error('Ошибка инициализации YouTube плеера:', error);
+      }
+    };
+
+    initYouTubePlayer();
+
+    return () => {
+      if (youtubeIntervalRef.current) {
+        clearInterval(youtubeIntervalRef.current);
+      }
+      if (playerInstance) {
+        try {
+          playerInstance.destroy();
+        } catch (e) {
+          console.error('Ошибка при уничтожении YouTube плеера:', e);
+        }
+      }
+    };
+  }, [isYouTube, youtubeVideoId]);
+
+  useEffect(() => {
+    return () => {
+      if (qualityRetryTimeoutRef.current) {
+        clearTimeout(qualityRetryTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Обновление времени воспроизведения для YouTube
+  useEffect(() => {
+    if (!isYouTube || !youtubePlayer || !youtubeReady) return;
+
+    youtubeIntervalRef.current = setInterval(() => {
+      if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
+        try {
+          const time = youtubePlayer.getCurrentTime();
+          if (time !== undefined && !isNaN(time)) {
+            setCurrentTime(time);
+          }
+        } catch (e) {
+          console.error('Ошибка получения времени:', e);
+        }
+      }
+    }, 1000);
+
+    return () => {
+      if (youtubeIntervalRef.current) {
+        clearInterval(youtubeIntervalRef.current);
+      }
+    };
+  }, [isYouTube, youtubePlayer, youtubeReady]);
 
   useEffect(() => {
     // Пропускаем для YouTube видео (они используют iframe)
@@ -102,38 +318,64 @@ function VideoPlayer({ videoUrl, title, onBack, poster }) {
   };
 
   const togglePlay = () => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (isPlaying) {
-      video.pause();
+    if (isYouTube && youtubePlayer) {
+      if (isPlaying) {
+        youtubePlayer.pauseVideo();
+      } else {
+        youtubePlayer.playVideo();
+      }
     } else {
-      video.play();
+      const video = videoRef.current;
+      if (!video) return;
+
+      if (isPlaying) {
+        video.pause();
+      } else {
+        video.play();
+      }
+      setIsPlaying(!isPlaying);
     }
-    setIsPlaying(!isPlaying);
   };
 
   const skipTime = (seconds) => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + seconds));
+    if (isYouTube && youtubePlayer) {
+      const currentTime = youtubePlayer.getCurrentTime();
+      const newTime = Math.max(0, Math.min(duration, currentTime + seconds));
+      youtubePlayer.seekTo(newTime, true);
+    } else {
+      const video = videoRef.current;
+      if (!video) return;
+      video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + seconds));
+    }
   };
 
   const handleProgressChange = (e) => {
-    const video = videoRef.current;
-    if (!video) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const pos = (e.clientX - rect.left) / rect.width;
-    video.currentTime = pos * video.duration;
+    if (isYouTube && youtubePlayer) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const pos = (e.clientX - rect.left) / rect.width;
+      const newTime = pos * duration;
+      youtubePlayer.seekTo(newTime, true);
+    } else {
+      const video = videoRef.current;
+      if (!video) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const pos = (e.clientX - rect.left) / rect.width;
+      video.currentTime = pos * video.duration;
+    }
   };
 
   const handleProgressHover = (e) => {
-    const video = videoRef.current;
-    if (!video || !progressBarRef.current || !showControls) return;
+    if (!progressBarRef.current || !showControls) return;
     const rect = progressBarRef.current.getBoundingClientRect();
     const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     setPreviewPosition(pos);
-    setPreviewTime(pos * video.duration);
+    if (isYouTube) {
+      setPreviewTime(pos * duration);
+    } else {
+      const video = videoRef.current;
+      if (!video) return;
+      setPreviewTime(pos * video.duration);
+    }
     setShowPreview(true);
   };
 
@@ -142,10 +384,19 @@ function VideoPlayer({ videoUrl, title, onBack, poster }) {
   };
 
   const toggleMute = () => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.muted = !isMuted;
-    setIsMuted(!isMuted);
+    if (isYouTube && youtubePlayer) {
+      if (isMuted) {
+        youtubePlayer.unMute();
+      } else {
+        youtubePlayer.mute();
+      }
+      setIsMuted(!isMuted);
+    } else {
+      const video = videoRef.current;
+      if (!video) return;
+      video.muted = !isMuted;
+      setIsMuted(!isMuted);
+    }
   };
 
   const toggleFullscreen = () => {
@@ -157,19 +408,90 @@ function VideoPlayer({ videoUrl, title, onBack, poster }) {
         player.requestFullscreen();
       } else if (player.webkitRequestFullscreen) {
         player.webkitRequestFullscreen();
+      } else if (player.mozRequestFullScreen) {
+        player.mozRequestFullScreen();
       } else if (player.msRequestFullscreen) {
         player.msRequestFullscreen();
       }
+      setIsFullscreen(true);
     } else {
       if (document.exitFullscreen) {
         document.exitFullscreen();
       } else if (document.webkitExitFullscreen) {
         document.webkitExitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
       } else if (document.msExitFullscreen) {
         document.msExitFullscreen();
       }
+      setIsFullscreen(false);
     }
-    setIsFullscreen(!isFullscreen);
+  };
+
+  // Отслеживание изменения полноэкранного режима
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement
+      );
+      setIsFullscreen(isCurrentlyFullscreen);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, []);
+
+  const changeQuality = (quality) => {
+    if (!(isYouTube && youtubePlayer)) {
+      return;
+    }
+
+    const currentLevels = youtubePlayer.getAvailableQualityLevels?.() || availableQualities;
+    if (quality !== 'auto' && !currentLevels.includes(quality)) {
+      console.warn(`Качество ${quality} недоступно для текущего видео`);
+      return;
+    }
+
+    desiredQualityRef.current = quality;
+
+    if (quality === 'auto') {
+      try {
+        youtubePlayer.setPlaybackQuality('default');
+        setPlaybackQuality('auto');
+      } catch (e) {
+        console.error('Ошибка изменения качества:', e);
+      }
+      return;
+    }
+
+    try {
+      youtubePlayer.setPlaybackQuality(quality);
+      setPlaybackQuality(quality);
+
+      const enforceQuality = (attempt = 0) => {
+        if (!youtubePlayer || attempt > 4) return;
+        const currentQuality = youtubePlayer.getPlaybackQuality?.();
+        if (currentQuality === quality) return;
+        youtubePlayer.setPlaybackQuality(quality);
+        qualityRetryTimeoutRef.current = setTimeout(() => enforceQuality(attempt + 1), 400);
+      };
+
+      enforceQuality();
+    } catch (e) {
+      console.error('Ошибка изменения качества:', e);
+    }
   };
 
   const formatTime = (timeInSeconds) => {
@@ -182,31 +504,147 @@ function VideoPlayer({ videoUrl, title, onBack, poster }) {
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-  // Если это YouTube видео, используем iframe
-  if (isYouTube && youtubeEmbedUrl) {
+  // Если это YouTube видео, используем YouTube IFrame API
+  if (isYouTube && youtubeVideoId) {
     return (
       <div 
         ref={playerRef}
         className="video-player video-player-youtube" 
+        onClick={handlePlayerClick}
+        onMouseMove={handlePlayerMouseMove}
       >
-        <iframe
-          className="video-element video-element-youtube"
-          src={youtubeEmbedUrl}
-          title={title || 'YouTube video player'}
-          frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowFullScreen
-        />
+        <div ref={youtubePlayerRef} className="video-element-youtube-container"></div>
         
-        <div className="player-controls visible">
+        <div className={`player-controls ${showControls ? 'visible' : ''}`}>
           <div className="top-bar">
             <div className="top-bar-left">
               <button className="control-button back-button" onClick={onBack} aria-label="Back">
                 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M20 24L12 16L20 8" stroke="var(--color-text-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M20 24L12 16L20 8" stroke="#EBFAFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
               <h1 className="video-title">{title || 'Название'}</h1>
+            </div>
+            
+            <div className="top-bar-right">
+              <div className="quality-selector">
+                <button className="control-button quality-button" aria-label="Quality" type="button">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="#EBFAFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M19.35 15C19.2 15.3 19.2 15.65 19.35 15.95L19.4 16C19.5092 16.1062 19.5817 16.2438 19.6069 16.3923C19.6321 16.5408 19.6087 16.6932 19.54 16.825C18.8181 18.1891 17.8181 19.3891 16.6 20.35C16.4562 20.4612 16.2778 20.5203 16.0938 20.5181C15.9097 20.5159 15.7328 20.4526 15.5917 20.3383L15.5 20.25C15.25 20 14.85 20 14.5 20.25C14.15 20.5 13.75 20.5 13.4 20.25C12.7 19.75 11.3 19.75 10.6 20.25C10.25 20.5 9.85 20.5 9.5 20.25C9.15 20 8.75 20 8.5 20.25L8.4083 20.3383C8.2672 20.4526 8.0903 20.5159 7.9062 20.5181C7.7222 20.5203 7.5438 20.4612 7.4 20.35C6.1819 19.3891 5.1819 18.1891 4.46 16.825C4.3913 16.6932 4.3679 16.5408 4.3931 16.3923C4.4183 16.2438 4.4908 16.1062 4.6 16L4.65 15.95C4.8 15.65 4.8 15.3 4.65 15C4.5 14.7 4.15 14.7 3.85 14.85C2.55 15.3 1.5 16.2 0.9 17.3C0.3 18.4 0.2 19.65 0.6 20.8C0.7 21.1 1 21.3 1.3 21.3H1.4C1.7 21.3 2 21.1 2.1 20.8C2.4 19.9 2.9 19.1 3.6 18.5C4.3 17.9 5.1 17.5 6 17.3C6.3 17.2 6.5 16.9 6.5 16.6C6.5 16.3 6.3 16 6 15.9C5.1 15.7 4.3 15.3 3.6 14.7C2.9 14.1 2.4 13.3 2.1 12.4C2 12.1 1.7 11.9 1.4 11.9H1.3C1 11.9 0.7 12.1 0.6 12.4C0.2 13.55 0.3 14.8 0.9 15.9C1.5 17 2.55 17.9 3.85 18.35C4.15 18.5 4.5 18.5 4.65 18.2C4.8 17.9 4.8 17.55 4.65 17.25L4.6 17.2C4.4908 17.0938 4.4183 16.9562 4.3931 16.8077C4.3679 16.6592 4.3913 16.5068 4.46 16.375C5.1819 15.0109 6.1819 13.8109 7.4 12.85C7.5438 12.7388 7.7222 12.6797 7.9062 12.6819C8.0903 12.6841 8.2672 12.7474 8.4083 12.8617L8.5 12.95C8.75 13.2 9.15 13.2 9.5 12.95C9.85 12.7 10.25 12.7 10.6 12.95C11.3 13.45 12.7 13.45 13.4 12.95C13.75 12.7 14.15 12.7 14.5 12.95C14.85 13.2 15.25 13.2 15.5 12.95L15.5917 12.8617C15.7328 12.7474 15.9097 12.6841 16.0938 12.6819C16.2778 12.6797 16.4562 12.7388 16.6 12.85C17.8181 13.8109 18.8181 15.0109 19.54 16.375C19.6087 16.5068 19.6321 16.6592 19.6069 16.8077C19.5817 16.9562 19.5092 17.0938 19.4 17.2L19.35 17.25C19.2 17.55 19.2 17.9 19.35 18.2C19.5 18.5 19.85 18.5 20.15 18.35C21.45 17.9 22.5 17 23.1 15.9C23.7 14.8 23.8 13.55 23.4 12.4C23.3 12.1 23 11.9 22.7 11.9H22.6C22.3 11.9 22 12.1 21.9 12.4C21.6 13.3 21.1 14.1 20.4 14.7C19.7 15.3 18.9 15.7 18 15.9C17.7 16 17.5 16.3 17.5 16.6C17.5 16.9 17.7 17.2 18 17.3C18.9 17.5 19.7 17.9 20.4 18.5C21.1 19.1 21.6 19.9 21.9 20.8C22 21.1 22.3 21.3 22.6 21.3H22.7C23 21.3 23.3 21.1 23.4 20.8C23.8 19.65 23.7 18.4 23.1 17.3C22.5 16.2 21.45 15.3 20.15 14.85C19.85 14.7 19.5 14.7 19.35 15Z" stroke="#EBFAFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span className="quality-label">{qualityLabel}</span>
+                </button>
+                <div className="quality-menu">
+                  {QUALITY_OPTIONS.map((option) => {
+                    const isDisabled = option.value !== 'auto' && !availableQualities.includes(option.value);
+                    const isActive = playbackQuality === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => !isDisabled && changeQuality(option.value)}
+                        className={`${isActive ? 'active' : ''} ${isDisabled ? 'disabled' : ''}`.trim()}
+                        disabled={isDisabled}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              <button className="control-button fullscreen-button" onClick={toggleFullscreen} aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>
+                {isFullscreen ? (
+                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 8V12H8M20 8V12H24M8 20H12V24M24 20H20V24" stroke="#EBFAFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                ) : (
+                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 8H12V12M24 8H20V12M12 24H8V20M20 24H24V20" stroke="#EBFAFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className="center-controls">
+            <button className="control-button skip-button" onClick={() => skipTime(-10)} aria-label="Rewind 10 seconds">
+              <div className="skip-button-content">
+                <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="28" cy="28" r="26" stroke="#228EE5" strokeWidth="2" fill="rgba(34, 142, 229, 0.15)"/>
+                  <path d="M20 18L12 28L20 38" stroke="#228EE5" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                  <path d="M12 28H36" stroke="#228EE5" strokeWidth="3" strokeLinecap="round"/>
+                </svg>
+                <span className="skip-label">10</span>
+              </div>
+            </button>
+
+            <button className="control-button play-button" onClick={togglePlay} aria-label={isPlaying ? 'Pause' : 'Play'}>
+              {isPlaying ? (
+                <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="40" cy="40" r="38" fill="rgba(34, 142, 229, 0.2)" stroke="#228EE5" strokeWidth="2"/>
+                  <rect x="24" y="20" width="10" height="40" rx="2" fill="#228EE5"/>
+                  <rect x="46" y="20" width="10" height="40" rx="2" fill="#228EE5"/>
+                </svg>
+              ) : (
+                <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="40" cy="40" r="38" fill="rgba(34, 142, 229, 0.2)" stroke="#228EE5" strokeWidth="2"/>
+                  <path d="M28 20L60 40L28 60V20Z" fill="#228EE5"/>
+                </svg>
+              )}
+            </button>
+
+            <button className="control-button skip-button" onClick={() => skipTime(10)} aria-label="Forward 10 seconds">
+              <div className="skip-button-content">
+                <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="28" cy="28" r="26" stroke="#228EE5" strokeWidth="2" fill="rgba(34, 142, 229, 0.15)"/>
+                  <path d="M36 18L44 28L36 38" stroke="#228EE5" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                  <path d="M20 28H44" stroke="#228EE5" strokeWidth="3" strokeLinecap="round"/>
+                </svg>
+                <span className="skip-label">10</span>
+              </div>
+            </button>
+          </div>
+
+          <div className="bottom-bar">
+            <div 
+              ref={progressBarRef}
+              className="progress-bar" 
+              onClick={handleProgressChange}
+            >
+              <div className="progress-track">
+                <div 
+                  className="progress-filled" 
+                  style={{ width: `${progress}%` }}
+                >
+                  <div className="progress-handle"></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bottom-controls">
+              <div className="bottom-controls-left">
+                <button className="control-button volume-button" onClick={toggleMute} aria-label={isMuted ? 'Unmute' : 'Mute'}>
+                  {isMuted ? (
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M18 10L14 14H10V18H14L18 22V10Z" fill="#EBFAFF"/>
+                      <path d="M24 14L28 18M28 14L24 18" stroke="#EBFAFF" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  ) : (
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M18 10L14 14H10V18H14L18 22V10Z" fill="#EBFAFF"/>
+                      <path d="M22 14C22.6667 14.6667 24 16.4 24 18C24 19.6 22.6667 21.3333 22 22" stroke="#EBFAFF" strokeWidth="1.5" strokeLinecap="round"/>
+                      <path d="M25 11C26.3333 12.3333 29 15.6 29 18C29 20.4 26.3333 23.6667 25 25" stroke="#EBFAFF" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                  )}
+                </button>
+                <span className="time-display">{formatTime(currentTime)}</span>
+              </div>
+
+              <div className="bottom-controls-right">
+                <span className="time-display">{formatTime(duration)}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -275,36 +713,40 @@ function VideoPlayer({ videoUrl, title, onBack, poster }) {
 
         <div className="center-controls">
           <button className="control-button skip-button" onClick={() => skipTime(-10)} aria-label="Rewind 10 seconds">
-            <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="32" cy="32" r="30" stroke="#228EE5" strokeWidth="2"/>
-              <path d="M32 16V32L40 40" stroke="#228EE5" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M20 24C22.6667 20.6667 27.6 14 36 14" stroke="#228EE5" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M20 24V16M20 24H28" stroke="#228EE5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <text x="32" y="38" fill="#228EE5" fontSize="14" fontWeight="600" textAnchor="middle">10</text>
-            </svg>
+            <div className="skip-button-content">
+              <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="28" cy="28" r="26" stroke="#228EE5" strokeWidth="2" fill="rgba(34, 142, 229, 0.15)"/>
+                <path d="M20 18L12 28L20 38" stroke="#228EE5" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                <path d="M12 28H36" stroke="#228EE5" strokeWidth="3" strokeLinecap="round"/>
+              </svg>
+              <span className="skip-label">10</span>
+            </div>
           </button>
 
           <button className="control-button play-button" onClick={togglePlay} aria-label={isPlaying ? 'Pause' : 'Play'}>
             {isPlaying ? (
               <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="40" cy="40" r="38" fill="rgba(34, 142, 229, 0.2)" stroke="#228EE5" strokeWidth="2"/>
                 <rect x="24" y="20" width="10" height="40" rx="2" fill="#228EE5"/>
                 <rect x="46" y="20" width="10" height="40" rx="2" fill="#228EE5"/>
               </svg>
             ) : (
               <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="40" cy="40" r="38" fill="rgba(34, 142, 229, 0.2)" stroke="#228EE5" strokeWidth="2"/>
                 <path d="M28 20L60 40L28 60V20Z" fill="#228EE5"/>
               </svg>
             )}
           </button>
 
           <button className="control-button skip-button" onClick={() => skipTime(10)} aria-label="Forward 10 seconds">
-            <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="32" cy="32" r="30" stroke="#228EE5" strokeWidth="2"/>
-              <path d="M32 16V32L24 40" stroke="#228EE5" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M44 24C41.3333 20.6667 36.4 14 28 14" stroke="#228EE5" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M44 24V16M44 24H36" stroke="#228EE5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <text x="32" y="38" fill="#228EE5" fontSize="14" fontWeight="600" textAnchor="middle">10</text>
-            </svg>
+            <div className="skip-button-content">
+              <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="28" cy="28" r="26" stroke="#228EE5" strokeWidth="2" fill="rgba(34, 142, 229, 0.15)"/>
+                <path d="M36 18L44 28L36 38" stroke="#228EE5" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                <path d="M20 28H44" stroke="#228EE5" strokeWidth="3" strokeLinecap="round"/>
+              </svg>
+              <span className="skip-label">10</span>
+            </div>
           </button>
         </div>
 

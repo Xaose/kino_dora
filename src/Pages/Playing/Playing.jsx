@@ -1,15 +1,15 @@
 ﻿import React from 'react';
 import VideoPlayer from '../../Components/VideoPlayer/VideoPlayer';
-import { useMovie } from '../../hooks/useMovie';
+import { useMedia } from '../../hooks/useMedia';
 import { POSTER_PLACEHOLDER } from '../../constants/placeholders';
 import './Playing.css';
 
-function Playing({ onNavigate, selectedMovieId }) {
-  const { movie, loading, error } = useMovie(selectedMovieId);
+function Playing({ onNavigate, selectedMovieId, mediaType = 'movie' }) {
+  const { movie, loading, error } = useMedia(selectedMovieId, mediaType);
 
   const handleBack = () => {
     if (onNavigate) {
-      onNavigate('movieshow');
+      onNavigate('movieshow', null, { movieId: selectedMovieId, type: mediaType });
     }
   };
 
