@@ -127,6 +127,28 @@
   min-height: 150px;
 }
 
+.form-status {
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-family: Lato, -apple-system, Roboto, Helvetica, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  margin-top: 8px;
+
+  &.success {
+    background: rgba(52, 211, 153, 0.15);
+    border: 1px solid rgba(52, 211, 153, 0.3);
+    color: #34d399;
+  }
+
+  &.error {
+    background: rgba(248, 113, 113, 0.15);
+    border: 1px solid rgba(248, 113, 113, 0.3);
+    color: #f87171;
+  }
+}
+
 .submit-btn {
   display: flex;
   align-items: center;
@@ -145,13 +167,18 @@
   transition: all 0.3s ease;
   margin-top: 12px;
   
-  &:hover {
+  &:hover:not(:disabled) {
     background: #1a7bc7;
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(34, 142, 229, 0.3);
   }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
   
-  &:active {
+  &:active:not(:disabled) {
     transform: translateY(0);
   }
   

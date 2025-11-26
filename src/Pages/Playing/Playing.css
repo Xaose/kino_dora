@@ -21,9 +21,181 @@
   cursor: pointer;
 }
 
+.season-episode-selector {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  display: flex;
+  gap: 20px;
+  align-items: flex-end;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(20, 20, 30, 0.9) 100%);
+  padding: 20px 24px;
+  border-radius: 16px;
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(34, 142, 229, 0.4);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 
+              0 0 0 1px rgba(34, 142, 229, 0.1) inset,
+              0 0 20px rgba(34, 142, 229, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
+.season-episode-selector:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 
+              0 0 0 1px rgba(34, 142, 229, 0.2) inset,
+              0 0 30px rgba(34, 142, 229, 0.15);
+  border-color: rgba(34, 142, 229, 0.6);
+}
 
+.selector-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+}
 
+.selector-group::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(34, 142, 229, 0.3), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.selector-group:focus-within::after {
+  opacity: 1;
+}
+
+.selector-group label {
+  font-size: 12px;
+  color: rgba(235, 250, 255, 0.7);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+  transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+}
+
+.selector-group label svg {
+  opacity: 0.7;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.selector-group:focus-within label {
+  color: #228EE5;
+}
+
+.selector-group:focus-within label svg {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.selector-group select {
+  padding: 12px 16px;
+  padding-right: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(34, 142, 229, 0.3);
+  background: linear-gradient(135deg, rgba(34, 142, 229, 0.08) 0%, rgba(34, 142, 229, 0.12) 100%);
+  color: #EBFAFF;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 200px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23228EE5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 12px;
+}
+
+.selector-group select:hover {
+  border-color: rgba(34, 142, 229, 0.6);
+  background: linear-gradient(135deg, rgba(34, 142, 229, 0.15) 0%, rgba(34, 142, 229, 0.2) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(34, 142, 229, 0.2);
+}
+
+.selector-group select:focus {
+  outline: none;
+  border-color: #228EE5;
+  background: linear-gradient(135deg, rgba(34, 142, 229, 0.2) 0%, rgba(34, 142, 229, 0.25) 100%);
+  box-shadow: 0 0 0 3px rgba(34, 142, 229, 0.15),
+              0 4px 16px rgba(34, 142, 229, 0.3);
+  transform: translateY(-1px);
+}
+
+.selector-group select:active {
+  transform: translateY(0);
+}
+
+.selector-group select option {
+  background: #1a1a2e;
+  color: #EBFAFF;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.selector-group select option:hover {
+  background: rgba(34, 142, 229, 0.2);
+}
+
+.selector-group select option:checked {
+  background: rgba(34, 142, 229, 0.3);
+  color: #228EE5;
+}
+
+@media (max-width: 768px) {
+  .season-episode-selector {
+    top: 15px;
+    left: 15px;
+    right: 15px;
+    flex-direction: row;
+    align-items: flex-end;
+    padding: 16px 18px;
+    gap: 12px;
+  }
+
+  .selector-group {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .selector-group select {
+    width: 100%;
+    min-width: 0;
+    font-size: 14px;
+    padding: 10px 14px;
+    padding-right: 36px;
+  }
+
+  .selector-group label {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .season-episode-selector {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    padding: 14px 16px;
+    gap: 10px;
+  }
+
+  .selector-group select {
+    font-size: 13px;
+    padding: 9px 12px;
+    padding-right: 32px;
+  }
+}
 
 
 

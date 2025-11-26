@@ -323,9 +323,15 @@
   cursor: pointer;
   transition: all 0.3s ease;
   
-  &:hover {
+  &:hover:not(:disabled) {
     background: #1a7bc7;
     transform: scale(1.05);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #1a5a8a;
   }
   
   .play-icon {
@@ -353,15 +359,58 @@
   cursor: pointer;
   transition: all 0.3s ease;
   
-  &:hover {
+  &:hover:not(:disabled) {
     background: rgba(34, 142, 229, 0.1);
     transform: scale(1.05);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    border-color: rgba(34, 142, 229, 0.5);
   }
   
   .arrow-icon {
     width: 16px;
     height: 16px;
   }
+}
+
+.continue-watching-section {
+  width: 100%;
+  max-width: 1440px;
+  margin: 60px auto;
+  padding: 0 48px;
+  position: relative;
+
+  @media (max-width: 768px) {
+    padding: 0 24px;
+    margin: 40px auto;
+  }
+}
+
+.continue-watching-item {
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.continue-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.continue-progress-filled {
+  height: 100%;
+  background: linear-gradient(90deg, #228EE5 0%, #65D9FF 100%);
+  transition: width 0.3s ease;
+  box-shadow: 0 0 8px rgba(34, 142, 229, 0.5);
 }
 
 .trending-section,

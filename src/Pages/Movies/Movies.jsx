@@ -48,6 +48,15 @@ function Movies({ onNavigate }) {
     );
   };
 
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedYear('');
+    setSelectedCountry('');
+    setSelectedActor('');
+    setSelectedDirector('');
+    setSelectedGenres(['Драма', 'Боевик', 'Фантастика', 'Триллер']);
+  };
+
   const filteredMovies = useMemo(() => {
     let result = movies;
 
@@ -104,6 +113,15 @@ function Movies({ onNavigate }) {
           const actorName = (actor || '').toLowerCase();
           return actorName.includes(actorQuery);
         });
+      });
+    }
+
+    // Фильтрация по стране (если поле country существует в данных)
+    if (selectedCountry.trim()) {
+      const countryQuery = selectedCountry.toLowerCase().trim();
+      result = result.filter((movie) => {
+        const country = (movie.country || '').toLowerCase();
+        return country.includes(countryQuery);
       });
     }
 
@@ -316,7 +334,21 @@ function Movies({ onNavigate }) {
           </div>
 
           <section className="movies-grid-section">
-            <h2 className="movies-title">Фильмы</h2>
+            <div className="movies-section-header">
+              <h2 className="movies-title">Фильмы</h2>
+              <div className="movies-meta">
+                {(searchQuery || selectedYear || selectedCountry || selectedActor || selectedDirector || selectedGenres.length > 0) && (
+                  <button className="clear-filters-btn" onClick={clearFilters}>
+                    Очистить фильтры
+                  </button>
+                )}
+                {!moviesLoading && (
+                  <span className="movies-count">
+                    Найдено: {filteredMovies.length}
+                  </span>
+                )}
+              </div>
+            </div>
             
             <div className="movies-grid">
               {renderMovies()}

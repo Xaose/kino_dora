@@ -4,80 +4,18 @@ import { getCurrentUser } from './authService';
 // Массив дорам с заполненными полями (включая сезоны и серии)
 const newDoramas = [
   {
-    title: 'Игра в кальмара',
-    description: 'Сотни игроков с низким доходом получают приглашение принять участие в детских играх с заманчивым призом в 45,6 миллиарда вон. Они рискуют жизнью, чтобы стать единственным победителем.',
-    director: 'Хван Дон Хёк',
-    genres: ['Триллер', 'Драма', 'Экшн'],
-    actors: ['Ли Чон Джэ', 'Пак Хэ Су', 'О Ён Су', 'Хо Сон Тхэ'],
+    title: 'Алиса в пограничье',
+    description: 'Японский научно-фантастический триллер о Рёхэе Арису и его друзьях, которые оказываются в опустевшем Токио и вынуждены участвовать в опасных играх на выживание.',
+    director: 'Синсукэ Сато',
+    genres: ['Фантастика', 'Триллер', 'Экшн'],
+    actors: ['Кэнто Ямадзаки', 'Тао Цутия', 'Нидзиро Мураками', 'Ая Асахина'],
     ageRating: 18,
-    releaseYear: 2021,
-    runtime: '60 мин',
-    budget: 21400000,
-    poster: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500',
-    trailer: 'https://www.youtube.com/watch?v=oqxAJKy0ii4',
-    movie: 'https://www.youtube.com/watch?v=oqxAJKy0ii4',
-    seasons: [
-      {
-        seasonNumber: 1,
-        title: 'Сезон 1',
-        releaseYear: 2021,
-        episodes: [
-          {
-            episodeNumber: 1,
-            title: 'Красный свет, зеленый свет',
-            description: 'Сон Ги Хун получает загадочное приглашение принять участие в игре.',
-            runtime: '60 мин',
-            videoUrl: 'https://www.youtube.com/watch?v=oqxAJKy0ii4'
-          },
-          {
-            episodeNumber: 2,
-            title: 'Ад',
-            description: 'Игроки понимают, что проигрыш означает смерть.',
-            runtime: '60 мин',
-            videoUrl: 'https://www.youtube.com/watch?v=oqxAJKy0ii4'
-          }
-        ]
-      }
-    ],
-    episodes: [] // Общие эпизоды (если не привязаны к сезонам)
-  },
-  {
-    title: 'Паразиты',
-    description: 'История о семье Ки Тхэка, которая постепенно проникает в дом богатой семьи Пак, используя хитрость и обман.',
-    director: 'Пон Чжун Хо',
-    genres: ['Триллер', 'Драма', 'Комедия'],
-    actors: ['Сон Кан Хо', 'Ли Сон Гюн', 'Чо Ё Чон', 'Чхве У Сик'],
-    ageRating: 16,
-    releaseYear: 2019,
-    runtime: '132 мин',
-    budget: 11000000,
-    poster: 'https://images.unsplash.com/photo-1534809027769-b00d750a6bac?w=500',
-    trailer: 'https://www.youtube.com/watch?v=5xH0HfJHsaY',
-    movie: 'https://www.youtube.com/watch?v=5xH0HfJHsaY',
-    seasons: [],
-    episodes: [
-      {
-        episodeNumber: 1,
-        title: 'Эпизод 1',
-        description: 'Семья Ки Тхэка начинает свой план.',
-        runtime: '132 мин',
-        videoUrl: 'https://www.youtube.com/watch?v=5xH0HfJHsaY'
-      }
-    ]
-  },
-  {
-    title: 'Король: Вечный монарх',
-    description: 'Корейский император пытается закрыть портал между двумя мирами и встречает детектива из современной Кореи.',
-    director: 'Бэк Сан Хун',
-    genres: ['Фантастика', 'Романтика', 'Драма'],
-    actors: ['Ли Мин Хо', 'Ким Го Ын', 'У До Хван', 'Чон Ын Чэ'],
-    ageRating: 12,
     releaseYear: 2020,
-    runtime: '70 мин',
-    budget: 30000000,
-    poster: 'https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?w=500',
-    trailer: 'https://www.youtube.com/watch?v=G5tzsfN5nwM',
-    movie: 'https://www.youtube.com/watch?v=G5tzsfN5nwM',
+    runtime: '50 мин',
+    budget: 25000000,
+    poster: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500',
+    trailer: 'https://www.youtube.com/watch?v=49_44FFKZ1M',
+    movie: 'https://www.youtube.com/watch?v=49_44FFKZ1M',
     seasons: [
       {
         seasonNumber: 1,
@@ -86,24 +24,45 @@ const newDoramas = [
         episodes: [
           {
             episodeNumber: 1,
-            title: 'Король двух миров',
-            description: 'Император Ли Гон пересекает портал в современную Корею.',
-            runtime: '70 мин',
-            videoUrl: 'https://www.youtube.com/watch?v=G5tzsfN5nwM'
+            title: 'Три карты',
+            description: 'Арису и его друзья попадают в пустой Токио и должны играть в смертельные игры.',
+            runtime: '50 мин',
+            videoUrl: 'https://www.youtube.com/watch?v=49_44FFKZ1M'
           },
           {
             episodeNumber: 2,
-            title: 'Лунная кролица',
-            description: 'Детектив Чон Тхэ И встречает загадочного мужчину.',
-            runtime: '70 мин',
-            videoUrl: 'https://www.youtube.com/watch?v=G5tzsfN5nwM'
+            title: 'Игра на выживание',
+            description: 'Герои понимают, что игры смертельны, и должны найти способ выжить.',
+            runtime: '50 мин',
+            videoUrl: 'https://www.youtube.com/watch?v=49_44FFKZ1M'
           },
           {
             episodeNumber: 3,
-            title: 'Тайна портала',
-            description: 'Тайна портала между мирами раскрывается.',
-            runtime: '70 мин',
-            videoUrl: 'https://www.youtube.com/watch?v=G5tzsfN5nwM'
+            title: 'Остров выживания',
+            description: 'Арису встречает других игроков и узнает больше о правилах игр.',
+            runtime: '50 мин',
+            videoUrl: 'https://www.youtube.com/watch?v=49_44FFKZ1M'
+          }
+        ]
+      },
+      {
+        seasonNumber: 2,
+        title: 'Сезон 2',
+        releaseYear: 2022,
+        episodes: [
+          {
+            episodeNumber: 1,
+            title: 'Король пик',
+            description: 'Арису и его команда сталкиваются с новыми, еще более опасными играми.',
+            runtime: '50 мин',
+            videoUrl: 'https://www.youtube.com/watch?v=49_44FFKZ1M'
+          },
+          {
+            episodeNumber: 2,
+            title: 'Игра с королем',
+            description: 'Герои должны победить в игре с королем, чтобы выжить.',
+            runtime: '50 мин',
+            videoUrl: 'https://www.youtube.com/watch?v=49_44FFKZ1M'
           }
         ]
       }
@@ -111,18 +70,122 @@ const newDoramas = [
     episodes: []
   },
   {
-    title: 'Винченцо',
-    description: 'Корейско-итальянский мафиози Винченцо Кассано возвращается в Корею и вступает в битву с коррумпированной корпорацией.',
-    director: 'Ким Хи Вон',
-    genres: ['Комедия', 'Криминал', 'Драма'],
-    actors: ['Сон Чжун Ки', 'Чон Ё Бин', 'Ок Тхэ Кю', 'Ким Ё Джин'],
+    title: 'Пентхаус',
+    description: 'Южнокорейская дорама о жизни элиты, проживающей в роскошном жилом комплексе "Гера Палас". Сюжет фокусируется на борьбе за власть, богатство и статус среди жителей комплекса.',
+    director: 'Чу Дон Мин',
+    genres: ['Драма', 'Триллер', 'Криминал'],
+    actors: ['Ли Джи А', 'Ким Со Ён', 'Юджин', 'Пак Ын Сок', 'Юн Джон Хи'],
     ageRating: 16,
+    releaseYear: 2020,
+    runtime: '70 мин',
+    budget: 35000000,
+    poster: 'https://images.unsplash.com/photo-1534809027769-b00d750a6bac?w=500',
+    trailer: 'https://www.youtube.com/watch?v=KqJqFjqJqFj',
+    movie: 'https://www.youtube.com/watch?v=KqJqFjqJqFj',
+    seasons: [
+      {
+        seasonNumber: 1,
+        title: 'Сезон 1',
+        releaseYear: 2020,
+        episodes: [
+          {
+            episodeNumber: 1,
+            title: 'Роскошь и предательство',
+            description: 'Жители "Гера Палас" начинают борьбу за власть и статус.',
+            runtime: '70 мин',
+            videoUrl: 'https://www.youtube.com/watch?v=KqJqFjqJqFj'
+          },
+          {
+            episodeNumber: 2,
+            title: 'Тайны пентхауса',
+            description: 'Раскрываются первые тайны жителей роскошного комплекса.',
+            runtime: '70 мин',
+            videoUrl: 'https://www.youtube.com/watch?v=KqJqFjqJqFj'
+          }
+        ]
+      },
+      {
+        seasonNumber: 2,
+        title: 'Сезон 2',
+        releaseYear: 2021,
+        episodes: [
+          {
+            episodeNumber: 1,
+            title: 'Возвращение',
+            description: 'Герои возвращаются в "Гера Палас" с новыми планами.',
+            runtime: '70 мин',
+            videoUrl: 'https://www.youtube.com/watch?v=KqJqFjqJqFj'
+          },
+          {
+            episodeNumber: 2,
+            title: 'Месть',
+            description: 'Начинается новая волна интриг и мести.',
+            runtime: '70 мин',
+            videoUrl: 'https://www.youtube.com/watch?v=KqJqFjqJqFj'
+          }
+        ]
+      }
+    ],
+    episodes: []
+  },
+  {
+    title: 'Побег семерых',
+    description: 'Южнокорейская дорама о семи людях, связанных с исчезновением девушки. Сюжет раскрывает их тайны и мотивы, приводящие к неожиданным последствиям.',
+    director: 'Ом Ки Джун',
+    genres: ['Триллер', 'Драма', 'Криминал'],
+    actors: ['Ум Ки Джун', 'Хван Джон Ым', 'Ли Джун', 'Чон Ын Джи', 'Ли Ю Би'],
+    ageRating: 16,
+    releaseYear: 2023,
+    runtime: '60 мин',
+    budget: 28000000,
+    poster: 'https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?w=500',
+    trailer: 'https://www.youtube.com/watch?v=escape7',
+    movie: 'https://www.youtube.com/watch?v=escape7',
+    seasons: [
+      {
+        seasonNumber: 1,
+        title: 'Сезон 1',
+        releaseYear: 2023,
+        episodes: [
+          {
+            episodeNumber: 1,
+            title: 'Исчезновение',
+            description: 'Таинственное исчезновение девушки связывает семерых людей.',
+            runtime: '60 мин',
+            videoUrl: 'https://www.youtube.com/watch?v=escape7'
+          },
+          {
+            episodeNumber: 2,
+            title: 'Тайны',
+            description: 'Раскрываются первые тайны семерых главных героев.',
+            runtime: '60 мин',
+            videoUrl: 'https://www.youtube.com/watch?v=escape7'
+          },
+          {
+            episodeNumber: 3,
+            title: 'Побег',
+            description: 'Герои пытаются скрыться от правосудия и последствий своих действий.',
+            runtime: '60 мин',
+            videoUrl: 'https://www.youtube.com/watch?v=escape7'
+          }
+        ]
+      }
+    ],
+    episodes: []
+  },
+  {
+    title: 'Мышь',
+    description: 'Южнокорейский триллер о детективе Ко Му Чхи и его юном коллеге Чон Ба Рыме, охотящихся на серийного убийцу. Сюжет исследует природу зла и генетику преступности.',
+    director: 'Чхве Чин Бом',
+    genres: ['Триллер', 'Криминал', 'Драма'],
+    actors: ['Ли Сын Ги', 'Ли Хи Джун', 'Пак Чжу Хён', 'Кён Су Джин'],
+    ageRating: 18,
     releaseYear: 2021,
-    runtime: '80 мин',
-    budget: 20000000,
+    runtime: '70 мин',
+    budget: 30000000,
     poster: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500',
-    trailer: 'https://www.youtube.com/watch?v=S12-4mXCNj4',
-    movie: 'https://www.youtube.com/watch?v=S12-4mXCNj4',
+    trailer: 'https://www.youtube.com/watch?v=mouse2021',
+    movie: 'https://www.youtube.com/watch?v=mouse2021',
     seasons: [
       {
         seasonNumber: 1,
@@ -131,17 +194,24 @@ const newDoramas = [
         episodes: [
           {
             episodeNumber: 1,
-            title: 'Возвращение мафиози',
-            description: 'Винченцо возвращается в Корею.',
-            runtime: '80 мин',
-            videoUrl: 'https://www.youtube.com/watch?v=S12-4mXCNj4'
+            title: 'Охотник',
+            description: 'Детектив Ко Му Чхи начинает охоту на серийного убийцу.',
+            runtime: '70 мин',
+            videoUrl: 'https://www.youtube.com/watch?v=mouse2021'
           },
           {
             episodeNumber: 2,
-            title: 'Битва начинается',
-            description: 'Винченцо начинает борьбу с корпорацией.',
-            runtime: '80 мин',
-            videoUrl: 'https://www.youtube.com/watch?v=S12-4mXCNj4'
+            title: 'Генетика зла',
+            description: 'Раскрывается связь между генетикой и преступным поведением.',
+            runtime: '70 мин',
+            videoUrl: 'https://www.youtube.com/watch?v=mouse2021'
+          },
+          {
+            episodeNumber: 3,
+            title: 'Игра в кошки-мышки',
+            description: 'Детективы приближаются к разгадке, но убийца всегда на шаг впереди.',
+            runtime: '70 мин',
+            videoUrl: 'https://www.youtube.com/watch?v=mouse2021'
           }
         ]
       }
@@ -149,37 +219,44 @@ const newDoramas = [
     episodes: []
   },
   {
-    title: 'Хилер',
-    description: 'Репортер и курьер с особыми способностями работают вместе, чтобы раскрыть правду о коррупции.',
-    director: 'Сон Чжун Хо',
-    genres: ['Экшн', 'Романтика', 'Драма'],
-    actors: ['Чи Чан Ук', 'Пак Мин Ён', 'Ю Джи Тхэ', 'Пак Сан Ун'],
-    ageRating: 12,
-    releaseYear: 2014,
+    title: 'Слепцы',
+    description: 'Южнокорейская дорама о детективе, судье и студенте юридического факультета, вовлечённых в серию убийств. Сюжет фокусируется на их попытках раскрыть правду и поймать преступника.',
+    director: 'Син Ён Сок',
+    genres: ['Триллер', 'Драма', 'Криминал'],
+    actors: ['Ок Тэк Ён', 'Ха Сок Джин', 'Чон Ын Джи', 'Ким Дон Ук'],
+    ageRating: 16,
+    releaseYear: 2022,
     runtime: '60 мин',
-    budget: 15000000,
+    budget: 25000000,
     poster: 'https://images.unsplash.com/photo-1534809027769-b00d750a6bac?w=500',
-    trailer: 'https://www.youtube.com/watch?v=8X5kEnw3zqI',
-    movie: 'https://www.youtube.com/watch?v=8X5kEnw3zqI',
+    trailer: 'https://www.youtube.com/watch?v=blind2022',
+    movie: 'https://www.youtube.com/watch?v=blind2022',
     seasons: [
       {
         seasonNumber: 1,
         title: 'Сезон 1',
-        releaseYear: 2014,
+        releaseYear: 2022,
         episodes: [
           {
             episodeNumber: 1,
-            title: 'Курьер',
-            description: 'Знакомство с главными героями.',
+            title: 'Первое убийство',
+            description: 'Детектив, судья и студент сталкиваются с серией загадочных убийств.',
             runtime: '60 мин',
-            videoUrl: 'https://www.youtube.com/watch?v=8X5kEnw3zqI'
+            videoUrl: 'https://www.youtube.com/watch?v=blind2022'
           },
           {
             episodeNumber: 2,
-            title: 'Правда',
-            description: 'Начало расследования.',
+            title: 'Следы',
+            description: 'Герои начинают расследование и находят первые зацепки.',
             runtime: '60 мин',
-            videoUrl: 'https://www.youtube.com/watch?v=8X5kEnw3zqI'
+            videoUrl: 'https://www.youtube.com/watch?v=blind2022'
+          },
+          {
+            episodeNumber: 3,
+            title: 'Правда',
+            description: 'Раскрывается связь между убийствами и прошлым героев.',
+            runtime: '60 мин',
+            videoUrl: 'https://www.youtube.com/watch?v=blind2022'
           }
         ]
       }

@@ -146,6 +146,12 @@ function MovieShow({ onNavigate, selectedMovieId, mediaType = 'movie' }) {
 
       {movie && (
         <>
+          <button className="movie-show-back-btn" onClick={handleBackToMovies}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Назад
+          </button>
           <div className="v2hero-banner">
             <img
               className="v2hero-image"

@@ -48,6 +48,15 @@ function Serials({ onNavigate }) {
     );
   };
 
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedYear('');
+    setSelectedCountry('');
+    setSelectedActor('');
+    setSelectedDirector('');
+    setSelectedGenres(['Драма', 'Роман', 'Боевик']);
+  };
+
   const filteredDoramas = useMemo(() => {
     let result = doramas;
 
@@ -104,6 +113,15 @@ function Serials({ onNavigate }) {
           const actorName = (actor || '').toLowerCase();
           return actorName.includes(actorQuery);
         });
+      });
+    }
+
+    // Фильтрация по стране (если поле country существует в данных)
+    if (selectedCountry.trim()) {
+      const countryQuery = selectedCountry.toLowerCase().trim();
+      result = result.filter((dorama) => {
+        const country = (dorama.country || '').toLowerCase();
+        return country.includes(countryQuery);
       });
     }
 
@@ -307,7 +325,21 @@ function Serials({ onNavigate }) {
           </div>
 
           <section className="serials-grid-section">
-            <h2 className="serials-section-title">Дорамы</h2>
+            <div className="serials-section-header">
+              <h2 className="serials-section-title">Дорамы</h2>
+              <div className="serials-meta">
+                {(searchQuery || selectedYear || selectedCountry || selectedActor || selectedDirector || selectedGenres.length > 0) && (
+                  <button className="clear-filters-btn" onClick={clearFilters}>
+                    Очистить фильтры
+                  </button>
+                )}
+                {!doramasLoading && (
+                  <span className="serials-count">
+                    Найдено: {filteredDoramas.length}
+                  </span>
+                )}
+              </div>
+            </div>
             
             <div className="serials-grid">
               {renderDoramas()}

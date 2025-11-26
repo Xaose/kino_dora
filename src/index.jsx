@@ -10,6 +10,7 @@ import Header from './Components/Header/Header';
 import FAQ from './Components/FAQ/FAQ';
 import Studios from './Components/Studios/Studios';
 import Footer from './Components/Footer/Footer';
+import ToastContainer from './Components/Toast/Toast';
 
 import Home from './Pages/Home/Home';
 import Movies from './Pages/Movies/Movies';
@@ -113,8 +114,9 @@ function App() {
 
   return (
     <>
-      <Header onNavigate={handleNavigate} currentPage={currentPage} />
+      {currentPage !== 'playing' && <Header onNavigate={handleNavigate} currentPage={currentPage} />}
       {renderPage()}
+      <ToastContainer />
     </>
   );
 }

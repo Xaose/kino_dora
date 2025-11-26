@@ -7,6 +7,7 @@ function Header({ onNavigate, currentPage = 'home' }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!getCurrentUser());
+  const [userData, setUserData] = useState(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === 'undefined') {
@@ -24,6 +25,7 @@ function Header({ onNavigate, currentPage = 'home' }) {
 
     const unsubscribeAuth = onAuthStateChange((user) => {
       setIsAuthenticated(!!user);
+      setUserData(user);
     });
 
     return () => {
@@ -106,10 +108,18 @@ function Header({ onNavigate, currentPage = 'home' }) {
             aria-label={isAuthenticated ? 'Перейти в профиль' : 'Войти в аккаунт'}
             type="button"
           >
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path fillRule="evenodd" clipRule="evenodd" d="M10.0004 8C10.0004 4.68629 12.6867 2 16.0004 2C19.3142 2 22.0004 4.68629 22.0004 8C22.0004 11.3137 19.3142 14 16.0004 14C12.6867 14 10.0004 11.3137 10.0004 8Z" fill="#EBFAFF" />
-              <path fillRule="evenodd" clipRule="evenodd" d="M5.0021 26.8071C5.10522 20.8208 9.98975 16 16.0004 16C22.0113 16 26.8959 20.821 26.9988 26.8075C27.0056 27.2046 26.7769 27.568 26.416 27.7336C23.2441 29.1891 19.7158 30 16.0009 30C12.2856 30 8.75702 29.1889 5.58487 27.7332C5.22398 27.5676 4.99526 27.2041 5.0021 26.8071Z" fill="#EBFAFF" />
-            </svg>
+            {isAuthenticated && userData?.profileImage ? (
+              <img 
+                src={userData.profileImage} 
+                alt="Profile" 
+                className="profile-avatar-image"
+              />
+            ) : (
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fillRule="evenodd" clipRule="evenodd" d="M10.0004 8C10.0004 4.68629 12.6867 2 16.0004 2C19.3142 2 22.0004 4.68629 22.0004 8C22.0004 11.3137 19.3142 14 16.0004 14C12.6867 14 10.0004 11.3137 10.0004 8Z" fill="#EBFAFF" />
+                <path fillRule="evenodd" clipRule="evenodd" d="M5.0021 26.8071C5.10522 20.8208 9.98975 16 16.0004 16C22.0113 16 26.8959 20.821 26.9988 26.8075C27.0056 27.2046 26.7769 27.568 26.416 27.7336C23.2441 29.1891 19.7158 30 16.0009 30C12.2856 30 8.75702 29.1889 5.58487 27.7332C5.22398 27.5676 4.99526 27.2041 5.0021 26.8071Z" fill="#EBFAFF" />
+              </svg>
+            )}
             <span className="profile-status-badge" aria-hidden="true" />
           </button>
         </div>

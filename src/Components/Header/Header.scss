@@ -200,6 +200,27 @@
 
 .profile-icon {
   position: relative;
+  border-radius: 50%;
+  overflow: hidden;
+
+  .profile-avatar-image {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(34, 142, 229, 0.3);
+    transition: border-color 0.3s ease, transform 0.3s ease;
+
+    @media (max-width: 991px) {
+      width: 28px;
+      height: 28px;
+    }
+  }
+
+  &:hover .profile-avatar-image {
+    border-color: rgba(34, 142, 229, 0.8);
+    transform: scale(1.1);
+  }
 
   .profile-status-badge {
     position: absolute;
@@ -211,6 +232,7 @@
     border: 2px solid rgba(3, 10, 27, 0.9);
     box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
     transition: background 0.3s ease, box-shadow 0.3s ease;
+    z-index: 1;
   }
 
   &.is-authenticated .profile-status-badge {

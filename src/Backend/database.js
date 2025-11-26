@@ -34,7 +34,9 @@ const normalizeMovieDocument = (doc) => ({
   posterUrl: doc.poster || doc.posterUrl || '',
   trailerUrl: doc.trailer || doc.trailerUrl || '',
   videoUrl: doc.movie || doc.videoUrl || '',
-  contentRating: doc.age || null
+  contentRating: doc.age || null,
+  seasons: doc.seasons || [],
+  episodes: doc.episodes || []
 });
 
 const serializeMovieData = (data = {}) => ({
@@ -49,7 +51,9 @@ const serializeMovieData = (data = {}) => ({
   poster: data.posterUrl ?? data.poster ?? '',
   trailer: data.trailerUrl ?? data.trailer ?? '',
   movie: data.videoUrl ?? data.movie ?? '',
-  actors: ensureArray(data.actors ?? [])
+  actors: ensureArray(data.actors ?? []),
+  seasons: data.seasons || [],
+  episodes: data.episodes || []
 });
 
 /**
@@ -346,5 +350,195 @@ export const usersService = {
   add: (userData) => addDocument('users', userData),
   update: (id, userData) => updateDocument('users', id, userData),
   delete: (id) => deleteDocument('users', id)
+};
+
+// Нормализация документа истории просмотра
+const normalizeWatchHistoryDocument = (doc) => ({
+  id: doc.id,
+  userId: doc.userId,
+  movieId: doc.movieId,
+  mediaType: doc.mediaType || 'movie',
+  movieKey: doc.movieKey,
+  seasonNumber: doc.seasonNumber || null,
+  episodeNumber: doc.episodeNumber || null,
+  currentTime: doc.currentTime || 0,
+  duration: doc.duration || 0,
+  progress: doc.progress || 0, // Процент просмотра (0-100)
+  lastWatchedAt: doc.lastWatchedAt?.toDate ? doc.lastWatchedAt.toDate() : doc.lastWatchedAt,
+  createdAt: doc.createdAt?.toDate ? doc.createdAt.toDate() : doc.createdAt,
+  updatedAt: doc.updatedAt?.toDate ? doc.updatedAt.toDate() : doc.updatedAt
+});
+
+// Работа с историей просмотра
+export const watchHistoryService = {
+  // Получить историю просмотра пользователя
+  getByUser: async (userId) => {
+    try {
+      console.log('🔍 Запрос истории для userId:', userId);
+      const collectionRef = collection(db, 'watchHistory');
+      // Убираем orderBy из запроса, чтобы не требовался индекс
+      // Сортировку делаем на клиенте
+      const historyQuery = query(
+        collectionRef,
+        where('userId', '==', userId)
+      );
+      const snapshot = await getDocs(historyQuery);
+
+      console.log('🔍 Найдено документов:', snapshot.size);
+
+      const history = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        console.log('🔍 Документ истории:', docSnap.id, data);
+        history.push(normalizeWatchHistoryDocument({ id: docSnap.id, ...data }));
+      });
+
+      console.log('🔍 Нормализованная история:', history);
+
+      // Сортируем на клиенте по дате последнего просмотра (от новых к старым)
+      history.sort((a, b) => {
+        const dateA = a.lastWatchedAt ? new Date(a.lastWatchedAt).getTime() : 0;
+        const dateB = b.lastWatchedAt ? new Date(b.lastWatchedAt).getTime() : 0;
+        return dateB - dateA;
+      });
+
+      console.log('🔍 Отсортированная история:', history);
+      return history;
+    } catch (error) {
+      console.error('❌ Ошибка при загрузке истории просмотра:', error);
+      throw error;
+    }
+  },
+
+  // Получить запись истории для конкретного фильма/серии
+  getByMovie: async (userId, movieId, mediaType = 'movie', seasonNumber = null, episodeNumber = null) => {
+    try {
+      const movieKey = `${mediaType}:${movieId}`;
+      const collectionRef = collection(db, 'watchHistory');
+      let historyQuery = query(
+        collectionRef,
+        where('userId', '==', userId),
+        where('movieKey', '==', movieKey)
+      );
+
+      const snapshot = await getDocs(historyQuery);
+      
+      // Фильтруем по сезону и серии, если указаны
+      let matchingDoc = null;
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (seasonNumber !== null && episodeNumber !== null) {
+          if (data.seasonNumber === seasonNumber && data.episodeNumber === episodeNumber) {
+            matchingDoc = { id: docSnap.id, ...data };
+          }
+        } else if (seasonNumber === null && episodeNumber === null) {
+          if (data.seasonNumber === null && data.episodeNumber === null) {
+            matchingDoc = { id: docSnap.id, ...data };
+          }
+        }
+      });
+
+      return matchingDoc ? normalizeWatchHistoryDocument(matchingDoc) : null;
+    } catch (error) {
+      console.error('Ошибка при получении истории просмотра:', error);
+      throw error;
+    }
+  },
+
+  // Сохранить/обновить прогресс просмотра
+  saveProgress: async (userId, movieId, mediaType, progressData) => {
+    try {
+      const movieKey = `${mediaType}:${movieId}`;
+      const {
+        currentTime = 0,
+        duration = 0,
+        seasonNumber = null,
+        episodeNumber = null
+      } = progressData;
+
+      // Валидация данных
+      if (!userId || !movieId || !mediaType) {
+        throw new Error('Недостаточно данных для сохранения прогресса');
+      }
+
+      if (duration <= 0 || currentTime < 0) {
+        console.warn('⚠️ Некорректные данные прогресса:', { currentTime, duration });
+        return null;
+      }
+
+      const progress = Math.round((currentTime / duration) * 100);
+
+      console.log('💾 Сохранение в БД:', {
+        userId,
+        movieId,
+        mediaType,
+        movieKey,
+        seasonNumber,
+        episodeNumber,
+        currentTime: Math.round(currentTime),
+        duration: Math.round(duration),
+        progress
+      });
+
+      // Ищем существующую запись
+      const existing = await watchHistoryService.getByMovie(userId, movieId, mediaType, seasonNumber, episodeNumber);
+
+      const historyData = {
+        userId,
+        movieId,
+        mediaType,
+        movieKey,
+        seasonNumber: seasonNumber !== null && seasonNumber !== undefined ? seasonNumber : null,
+        episodeNumber: episodeNumber !== null && episodeNumber !== undefined ? episodeNumber : null,
+        currentTime: Math.round(currentTime * 100) / 100, // Округляем до 2 знаков
+        duration: Math.round(duration * 100) / 100,
+        progress,
+        lastWatchedAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      };
+
+      if (existing) {
+        // Обновляем существующую запись
+        console.log('📝 Обновление существующей записи:', existing.id);
+        const docRef = doc(db, 'watchHistory', existing.id);
+        await updateDoc(docRef, historyData);
+        console.log('✅ Запись обновлена');
+        return { id: existing.id, ...historyData };
+      } else {
+        // Создаем новую запись
+        console.log('➕ Создание новой записи');
+        historyData.createdAt = Timestamp.now();
+        const docRef = await addDoc(collection(db, 'watchHistory'), historyData);
+        console.log('✅ Новая запись создана:', docRef.id);
+        return { id: docRef.id, ...historyData };
+      }
+    } catch (error) {
+      console.error('❌ Ошибка при сохранении прогресса:', error);
+      throw error;
+    }
+  },
+
+  // Удалить запись из истории
+  delete: async (historyId) => {
+    try {
+      return await deleteDocument('watchHistory', historyId);
+    } catch (error) {
+      console.error('Ошибка при удалении из истории:', error);
+      throw error;
+    }
+  },
+
+  // Очистить всю историю пользователя
+  clearUserHistory: async (userId) => {
+    try {
+      const history = await watchHistoryService.getByUser(userId);
+      const deletePromises = history.map(item => watchHistoryService.delete(item.id));
+      await Promise.all(deletePromises);
+      return true;
+    } catch (error) {
+      console.error('Ошибка при очистке истории:', error);
+      throw error;
+    }
+  }
 };
 

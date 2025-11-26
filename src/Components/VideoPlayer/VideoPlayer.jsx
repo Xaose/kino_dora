@@ -85,7 +85,7 @@ const QUALITY_LABELS = {
   default: 'Авто'
 };
 
-function VideoPlayer({ videoUrl, title, onBack, poster }) {
+function VideoPlayer({ videoUrl, title, onBack, poster, initialTime = 0, onProgressSave }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
@@ -108,6 +108,8 @@ function VideoPlayer({ videoUrl, title, onBack, poster }) {
   const youtubeIntervalRef = useRef(null);
   const qualityRetryTimeoutRef = useRef(null);
   const desiredQualityRef = useRef('hd1080');
+  const saveProgressTimeoutRef = useRef(null);
+  const hasRestoredPositionRef = useRef(false);
   
   const isYouTube = isYouTubeUrl(videoUrl);
   const youtubeVideoId = isYouTube ? getYouTubeVideoId(videoUrl) : null;
@@ -171,14 +173,35 @@ function VideoPlayer({ videoUrl, title, onBack, poster }) {
               setYoutubePlayer(player);
               setYoutubeReady(true);
               updateAvailableQualities(player);
-              try {
-                const duration = player.getDuration();
-                if (duration) {
-                  setDuration(duration);
+              
+              // Получаем длительность видео
+              const getDuration = () => {
+                try {
+                  const duration = player.getDuration();
+                  if (duration && duration > 0) {
+                    setDuration(duration);
+                    console.log('📹 YouTube длительность загружена:', duration);
+                  } else {
+                    // Повторяем попытку через 500мс, если длительность еще не загружена
+                    setTimeout(getDuration, 500);
+                  }
+                } catch (e) {
+                  console.error('Ошибка получения длительности:', e);
                 }
-              } catch (e) {
-                console.error('Ошибка получения длительности:', e);
+              };
+              getDuration();
+              
+              // Восстанавливаем позицию просмотра
+              if (initialTime > 0 && !hasRestoredPositionRef.current) {
+                try {
+                  player.seekTo(initialTime, true);
+                  hasRestoredPositionRef.current = true;
+                  console.log('⏪ Восстановлена позиция YouTube:', initialTime);
+                } catch (e) {
+                  console.error('Ошибка восстановления позиции:', e);
+                }
               }
+              
               setIsPlaying(true);
               try {
                 player.setPlaybackQuality('hd1080');
@@ -239,6 +262,96 @@ function VideoPlayer({ videoUrl, title, onBack, poster }) {
     };
   }, []);
 
+  // Сохранение прогресса каждые 10 секунд во время воспроизведения
+  useEffect(() => {
+    if (!onProgressSave || !isPlaying) return;
+    
+    // Не сохраняем, если duration еще не загружен
+    if (duration === 0) {
+      console.log('⏳ Ожидание загрузки длительности видео...');
+      return;
+    }
+    
+    // Не сохраняем, если видео только началось (меньше 5 секунд)
+    if (currentTime < 5) return;
+
+    // Сохраняем прогресс каждые 10 секунд
+    if (saveProgressTimeoutRef.current) {
+      clearTimeout(saveProgressTimeoutRef.current);
+    }
+
+    saveProgressTimeoutRef.current = setTimeout(() => {
+      if (onProgressSave && currentTime > 0 && duration > 0) {
+        const progress = Math.round((currentTime / duration) * 100);
+        console.log('💾 Автосохранение прогресса (каждые 10 сек):', { 
+          currentTime: Math.round(currentTime), 
+          duration: Math.round(duration), 
+          progress: progress + '%' 
+        });
+        onProgressSave(currentTime, duration);
+      }
+    }, 10000);
+
+    return () => {
+      if (saveProgressTimeoutRef.current) {
+        clearTimeout(saveProgressTimeoutRef.current);
+      }
+    };
+  }, [currentTime, duration, onProgressSave, isPlaying]);
+
+  // Сохранение прогресса при паузе
+  useEffect(() => {
+    if (!onProgressSave || isPlaying) return;
+    
+    // Не сохраняем, если duration еще не загружен
+    if (duration === 0) return;
+    
+    // Не сохраняем, если видео только началось (меньше 5 секунд)
+    if (currentTime < 5) return;
+
+    // Сохраняем прогресс при паузе (с небольшой задержкой, чтобы не спамить)
+    const saveOnPause = setTimeout(() => {
+      if (onProgressSave && currentTime > 0 && duration > 0) {
+        const progress = Math.round((currentTime / duration) * 100);
+        console.log('⏸️ Сохранение прогресса при паузе:', { 
+          currentTime: Math.round(currentTime), 
+          duration: Math.round(duration), 
+          progress: progress + '%' 
+        });
+        onProgressSave(currentTime, duration);
+      }
+    }, 2000);
+
+    return () => {
+      clearTimeout(saveOnPause);
+    };
+  }, [isPlaying, currentTime, duration, onProgressSave]);
+
+  // Сохранение прогресса при размонтировании и закрытии страницы
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Сохраняем прогресс при закрытии страницы
+      if (onProgressSave && currentTime > 0 && duration > 0) {
+        // Используем sendBeacon для надежного сохранения при закрытии
+        try {
+          onProgressSave(currentTime, duration);
+        } catch (e) {
+          console.error('Ошибка сохранения при закрытии:', e);
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      // Сохраняем прогресс при размонтировании компонента
+      if (onProgressSave && currentTime > 0 && duration > 0) {
+        onProgressSave(currentTime, duration);
+      }
+    };
+  }, []);
+
   // Обновление времени воспроизведения для YouTube
   useEffect(() => {
     if (!isYouTube || !youtubePlayer || !youtubeReady) return;
@@ -249,6 +362,19 @@ function VideoPlayer({ videoUrl, title, onBack, poster }) {
           const time = youtubePlayer.getCurrentTime();
           if (time !== undefined && !isNaN(time)) {
             setCurrentTime(time);
+          }
+          
+          // Обновляем duration, если он еще не установлен
+          if (duration === 0) {
+            try {
+              const videoDuration = youtubePlayer.getDuration();
+              if (videoDuration && videoDuration > 0) {
+                setDuration(videoDuration);
+                console.log('📹 YouTube длительность получена:', videoDuration);
+              }
+            } catch (e) {
+              // Игнорируем ошибки получения duration
+            }
           }
         } catch (e) {
           console.error('Ошибка получения времени:', e);
@@ -261,7 +387,7 @@ function VideoPlayer({ videoUrl, title, onBack, poster }) {
         clearInterval(youtubeIntervalRef.current);
       }
     };
-  }, [isYouTube, youtubePlayer, youtubeReady]);
+  }, [isYouTube, youtubePlayer, youtubeReady, duration]);
 
   useEffect(() => {
     // Пропускаем для YouTube видео (они используют iframe)
@@ -276,6 +402,12 @@ function VideoPlayer({ videoUrl, title, onBack, poster }) {
 
     const handleLoadedMetadata = () => {
       setDuration(video.duration);
+      
+      // Восстанавливаем позицию просмотра
+      if (initialTime > 0 && !hasRestoredPositionRef.current) {
+        video.currentTime = initialTime;
+        hasRestoredPositionRef.current = true;
+      }
     };
 
     const handleEnded = () => {
@@ -291,7 +423,7 @@ function VideoPlayer({ videoUrl, title, onBack, poster }) {
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       video.removeEventListener('ended', handleEnded);
     };
-  }, [isYouTube]);
+  }, [isYouTube, initialTime]);
 
   useEffect(() => {
     if (showControls && isPlaying) {

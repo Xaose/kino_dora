@@ -50,6 +50,21 @@ service cloud.firestore {
       // Удаление: только владелец профиля может удалять
       allow delete: if request.auth != null && request.auth.uid == userId;
     }
+    
+    // Правила для коллекции watchHistory (история просмотра)
+    match /watchHistory/{historyId} {
+      // Чтение: только владелец может читать свою историю
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      
+      // Создание: только авторизованные пользователи могут создавать записи в своей истории
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      
+      // Обновление: только владелец может обновлять свою историю
+      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
+      
+      // Удаление: только владелец может удалять из своей истории
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
   }
 }
 ```

@@ -1,7 +1,71 @@
-﻿import './Contact.scss';
+﻿import { useState } from 'react';
+import './Contact.scss';
 import Footer from '../../Components/Footer/Footer';
 
 function Contact({ onNavigate }) {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState({ type: null, message: '' });
+
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({ ...prev, [id]: value }));
+    setSubmitStatus({ type: null, message: '' });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Валидация
+    if (!formData.name.trim()) {
+      setSubmitStatus({ type: 'error', message: 'Пожалуйста, укажите ваше имя' });
+      return;
+    }
+    
+    if (!formData.email.trim() || !formData.email.includes('@')) {
+      setSubmitStatus({ type: 'error', message: 'Пожалуйста, укажите корректный email' });
+      return;
+    }
+    
+    if (!formData.message.trim()) {
+      setSubmitStatus({ type: 'error', message: 'Пожалуйста, введите сообщение' });
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitStatus({ type: null, message: '' });
+
+    try {
+      // Имитация отправки формы
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      setSubmitStatus({ 
+        type: 'success', 
+        message: 'Спасибо! Ваше сообщение отправлено. Мы свяжемся с вами в ближайшее время.' 
+      });
+      
+      // Очистка формы
+      setFormData({
+        name: '',
+        email: '',
+        subject: '',
+        message: ''
+      });
+    } catch (error) {
+      setSubmitStatus({ 
+        type: 'error', 
+        message: 'Произошла ошибка при отправке. Попробуйте позже или свяжитесь с нами по телефону.' 
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="contact-page">
       <div className="contact-hero">
@@ -17,7 +81,7 @@ function Contact({ onNavigate }) {
 
           <div className="contact-content">
             <div className="contact-form-wrapper">
-              <form className="contact-form">
+              <form className="contact-form" onSubmit={handleSubmit}>
                 <div className="form-group">
                   <label htmlFor="name" className="form-label">Ваше имя</label>
                   <input
@@ -25,6 +89,9 @@ function Contact({ onNavigate }) {
                     id="name"
                     className="form-input"
                     placeholder="Введите ваше имя"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
                   />
                 </div>
 
@@ -35,6 +102,9 @@ function Contact({ onNavigate }) {
                     id="email"
                     className="form-input"
                     placeholder="example@email.com"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
                   />
                 </div>
 
@@ -45,6 +115,8 @@ function Contact({ onNavigate }) {
                     id="subject"
                     className="form-input"
                     placeholder="Тема вашего сообщения"
+                    value={formData.subject}
+                    onChange={handleInputChange}
                   />
                 </div>
 
@@ -55,10 +127,23 @@ function Contact({ onNavigate }) {
                     className="form-textarea"
                     rows="6"
                     placeholder="Ваше сообщение..."
+                    value={formData.message}
+                    onChange={handleInputChange}
+                    required
                   ></textarea>
                 </div>
 
-                <button type="submit" className="submit-btn">
+                {submitStatus.message && (
+                  <div className={`form-status ${submitStatus.type}`}>
+                    {submitStatus.message}
+                  </div>
+                )}
+
+                <button 
+                  type="submit" 
+                  className="submit-btn"
+                  disabled={isSubmitting}
+                >
                   <svg 
                     className="send-icon"
                     width="20" 
@@ -75,7 +160,7 @@ function Contact({ onNavigate }) {
                       strokeLinejoin="round"
                     />
                   </svg>
-                  Отправить сообщение
+                  {isSubmitting ? 'Отправка...' : 'Отправить сообщение'}
                 </button>
               </form>
             </div>

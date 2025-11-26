@@ -8,8 +8,11 @@ import Series from '../../Components/Series/Series';
 import { useMovies } from '../../hooks/useMovies';
 import { useDoramas } from '../../hooks/useDoramas';
 import { POSTER_PLACEHOLDER } from '../../constants/placeholders';
-import { getCurrentUser } from '../../Backend/authService';
+import { getCurrentUser, onAuthStateChange } from '../../Backend/authService';
 import { addToFavorites } from '../../Backend/favoritesService';
+import { watchHistoryService } from '../../Backend/database';
+import { moviesService, doramasService } from '../../Backend/database';
+import { showSuccess, showError } from '../../Components/Toast/Toast';
 
 // Маппинг русских названий жанров на английские
 const genreMapping = {
@@ -64,6 +67,9 @@ function Home({ onNavigate }) {
   const [activeIndex, setActiveIndex] = useState(1);
   const [selectedMovieGenres, setSelectedMovieGenres] = useState(['Драма', 'Боевик', 'Фантастика', 'Триллер']);
   const [selectedSeriesGenres, setSelectedSeriesGenres] = useState(['Драма', 'Роман', 'Боевик']);
+  const [witcherMovieId, setWitcherMovieId] = useState(null);
+  const [continueWatching, setContinueWatching] = useState([]);
+  const [currentUser, setCurrentUser] = useState(() => getCurrentUser());
   const movieGenresRef = useRef(null);
   const doramaGenresRef = useRef(null);
   
@@ -131,6 +137,75 @@ function Home({ onNavigate }) {
     });
   }, [doramas, selectedSeriesGenres]);
 
+  // ID фильма "Ведьмак" в базе данных
+  const WITCHER_MOVIE_ID = 'F00cUFhuNfhPMSdNW8E0';
+
+  // Подписка на изменения аутентификации
+  useEffect(() => {
+    const unsubscribe = onAuthStateChange((user) => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Загрузка истории просмотра
+  useEffect(() => {
+    const loadWatchHistory = async () => {
+      if (!currentUser) {
+        setContinueWatching([]);
+        return;
+      }
+
+      try {
+        const history = await watchHistoryService.getByUser(currentUser.uid);
+        
+        // Фильтруем только те, которые не просмотрены полностью (progress < 95%)
+        const inProgress = history.filter(item => item.progress < 95);
+        
+        // Загружаем данные фильмов/дорам
+        if (inProgress.length > 0) {
+          const itemsWithData = await Promise.all(
+            inProgress.map(async (item) => {
+              try {
+                const service = item.mediaType === 'dorama' ? doramasService : moviesService;
+                const mediaData = await service.getById(item.movieId);
+                return { ...item, mediaData };
+              } catch (err) {
+                console.error(`Ошибка загрузки ${item.mediaType}:`, err);
+                return null;
+              }
+            })
+          );
+          setContinueWatching(itemsWithData.filter(Boolean));
+        } else {
+          setContinueWatching([]);
+        }
+      } catch (err) {
+        console.error('Ошибка загрузки истории просмотра:', err);
+        setContinueWatching([]);
+      }
+    };
+
+    loadWatchHistory();
+  }, [currentUser, movies.length, doramas.length]);
+
+  // Проверяем наличие фильма "Ведьмак" при загрузке данных
+  useEffect(() => {
+    if (movies.length > 0) {
+      const witcher = movies.find(movie => movie.id === WITCHER_MOVIE_ID);
+      if (witcher) {
+        setWitcherMovieId(WITCHER_MOVIE_ID);
+      } else {
+        // Если фильм не найден в загруженных, все равно устанавливаем ID
+        // (фильм может быть в базе, но еще не загружен)
+        setWitcherMovieId(WITCHER_MOVIE_ID);
+      }
+    } else {
+      // Устанавливаем ID сразу, даже если фильмы еще не загружены
+      setWitcherMovieId(WITCHER_MOVIE_ID);
+    }
+  }, [movies]);
+
   // Обработчики для открытия фильма/дорамы
   const openMovie = (movieId) => {
     onNavigate?.('movieshow', null, { movieId });
@@ -138,6 +213,20 @@ function Home({ onNavigate }) {
 
   const openDorama = (doramaId) => {
     onNavigate?.('movieshow', null, { movieId: doramaId, type: 'dorama' });
+  };
+
+  // Обработчик кнопки "Смотреть"
+  const handleWatchClick = () => {
+    if (witcherMovieId) {
+      onNavigate?.('playing', null, { movieId: witcherMovieId, type: 'movie' });
+    }
+  };
+
+  // Обработчик кнопки "Инфо"
+  const handleInfoClick = () => {
+    if (witcherMovieId) {
+      onNavigate?.('movieshow', null, { movieId: witcherMovieId, type: 'movie' });
+    }
   };
 
   // Обработчики для добавления в избранное
@@ -153,11 +242,12 @@ function Home({ onNavigate }) {
     try {
       const result = await addToFavorites(user.uid, movieId);
       if (result.success) {
-        console.log('Фильм добавлен в избранное');
+        showSuccess('Фильм добавлен в избранное');
       } else {
-        console.error('Ошибка добавления в избранное:', result.error);
+        showError(result.error || 'Ошибка добавления в избранное');
       }
     } catch (error) {
+      showError('Ошибка добавления в избранное');
       console.error('Ошибка добавления в избранное:', error);
     }
   };
@@ -174,16 +264,27 @@ function Home({ onNavigate }) {
     try {
       const result = await addToFavorites(user.uid, doramaId);
       if (result.success) {
-        console.log('Дорама добавлена в избранное');
+        showSuccess('Дорама добавлена в избранное');
       } else {
-        console.error('Ошибка добавления в избранное:', result.error);
+        showError(result.error || 'Ошибка добавления в избранное');
       }
     } catch (error) {
+      showError('Ошибка добавления в избранное');
       console.error('Ошибка добавления в избранное:', error);
     }
   };
 
-  // Статический массив для hero секции
+  const handleContinueWatching = (item) => {
+    if (onNavigate && item.mediaData) {
+      onNavigate('playing', null, {
+        movieId: item.movieId,
+        type: item.mediaType,
+        seasonNumber: item.seasonNumber,
+        episodeNumber: item.episodeNumber
+      });
+    }
+  };
+
   const films = [
     {
       id: 1,
@@ -349,7 +450,7 @@ function Home({ onNavigate }) {
           </div>
 
           <div className="hero-actions">
-            <button className="btn-watch">
+            <button className="btn-watch" onClick={handleWatchClick} disabled={!witcherMovieId}>
               <svg 
                 className="play-icon"
                 width="16" 
@@ -365,10 +466,10 @@ function Home({ onNavigate }) {
                   fill="#EBFAFF"
                 />
               </svg>
-              Смотерть
+              Смотреть
             </button>
 
-            <button className="btn-info">
+            <button className="btn-info" onClick={handleInfoClick} disabled={!witcherMovieId}>
               Инфо
               <svg 
                 className="arrow-icon"
@@ -390,6 +491,64 @@ function Home({ onNavigate }) {
           </div>
         </div>
       </div>
+
+      {continueWatching.length > 0 && (
+        <section className="continue-watching-section">
+          <div className="section-header">
+            <h2 className="section-title">Продолжить просмотр</h2>
+          </div>
+          <div className="movies-scroll">
+            <div className="movies-list">
+              {continueWatching.slice(0, 10).map((item) => {
+                if (!item.mediaData) return null;
+                
+                const progress = item.progress || 0;
+                const isSeries = item.mediaType === 'dorama';
+                
+                return isSeries ? (
+                  <div key={`continue-${item.id}`} className="continue-watching-item">
+                    <Series
+                      image={item.mediaData.posterUrl || POSTER_PLACEHOLDER}
+                      alt={item.mediaData.title}
+                      title={item.mediaData.title}
+                      subtitle={item.seasonNumber && item.episodeNumber 
+                        ? `Сезон ${item.seasonNumber}, Серия ${item.episodeNumber}` 
+                        : [item.mediaData.releaseYear, item.mediaData.genres?.[0]].filter(Boolean).join(' • ')}
+                      onClick={() => handleContinueWatching(item)}
+                      onAddToFavorites={handleAddDoramaToFavorites}
+                      doramaId={item.movieId}
+                    />
+                    <div className="continue-progress-bar">
+                      <div 
+                        className="continue-progress-filled" 
+                        style={{ width: `${progress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ) : (
+                  <div key={`continue-${item.id}`} className="continue-watching-item">
+                    <Movie
+                      image={item.mediaData.posterUrl || POSTER_PLACEHOLDER}
+                      alt={item.mediaData.title}
+                      title={item.mediaData.title}
+                      subtitle={[item.mediaData.releaseYear, item.mediaData.genres?.[0]].filter(Boolean).join(' • ')}
+                      onClick={() => handleContinueWatching(item)}
+                      onAddToFavorites={handleAddMovieToFavorites}
+                      movieId={item.movieId}
+                    />
+                    <div className="continue-progress-bar">
+                      <div 
+                        className="continue-progress-filled" 
+                        style={{ width: `${progress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="trending-section">
         <div className="section-header">

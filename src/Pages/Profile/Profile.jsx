@@ -2,15 +2,15 @@
 import './Profile.scss';
 import { getCurrentUser, onAuthStateChange, updateUserProfile, logoutUser } from '../../Backend/authService';
 import { getFavorites } from '../../Backend/favoritesService';
-import { moviesService } from '../../Backend/database';
-
-const POSTER_PLACEHOLDER = 'https://via.placeholder.com/300x450?text=No+Poster';
+import { moviesService, doramasService, watchHistoryService } from '../../Backend/database';
+import { showSuccess, showError } from '../../Components/Toast/Toast';
+import { POSTER_PLACEHOLDER } from '../../constants/placeholders';
 
 function Profile({ onNavigate }) {
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('profile'); // 'profile' или 'favorites'
+  const [activeTab, setActiveTab] = useState('profile'); // 'profile', 'favorites' или 'history'
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -21,6 +21,9 @@ function Profile({ onNavigate }) {
   const [favorites, setFavorites] = useState([]);
   const [favoritesMovies, setFavoritesMovies] = useState([]);
   const [loadingFavorites, setLoadingFavorites] = useState(false);
+  const [watchHistory, setWatchHistory] = useState([]);
+  const [watchHistoryData, setWatchHistoryData] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const fileInputRef = useRef(null);
@@ -37,6 +40,7 @@ function Profile({ onNavigate }) {
         });
         setLoading(false);
         loadFavorites(user.uid);
+        loadWatchHistory(user.uid);
       } else {
         // Если пользователь не авторизован, перенаправляем на страницу входа
         if (onNavigate) {
@@ -71,6 +75,87 @@ function Profile({ onNavigate }) {
       console.error('Ошибка загрузки избранного:', err);
     } finally {
       setLoadingFavorites(false);
+    }
+  };
+
+  const loadWatchHistory = async (userId) => {
+    setLoadingHistory(true);
+    try {
+      console.log('📚 Загрузка истории просмотра для пользователя:', userId);
+      const history = await watchHistoryService.getByUser(userId);
+      console.log('📚 Загружено записей истории:', history.length);
+      console.log('📚 История:', history);
+      setWatchHistory(history);
+      
+      // Загружаем данные фильмов/дорам
+      if (history.length > 0) {
+        console.log('📚 Загрузка данных фильмов/дорам для истории...');
+        const dataPromises = history.map(async (item) => {
+          try {
+            const service = item.mediaType === 'dorama' ? doramasService : moviesService;
+            const mediaData = await service.getById(item.movieId);
+            console.log(`✅ Загружены данные для ${item.mediaType}:`, item.movieId, mediaData?.title);
+            return { ...item, mediaData };
+          } catch (err) {
+            console.error(`❌ Ошибка загрузки ${item.mediaType} (ID: ${item.movieId}):`, err);
+            return null;
+          }
+        });
+        const data = await Promise.all(dataPromises);
+        const validData = data.filter(Boolean);
+        console.log('📚 Валидных записей с данными:', validData.length);
+        setWatchHistoryData(validData);
+      } else {
+        console.log('📚 История пуста');
+        setWatchHistoryData([]);
+      }
+    } catch (err) {
+      console.error('❌ Ошибка загрузки истории просмотра:', err);
+      setWatchHistoryData([]);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const handleDeleteHistoryItem = async (historyId) => {
+    try {
+      await watchHistoryService.delete(historyId);
+      setWatchHistory(prev => prev.filter(item => item.id !== historyId));
+      setWatchHistoryData(prev => prev.filter(item => item.id !== historyId));
+      showSuccess('Запись удалена из истории');
+    } catch (err) {
+      showError('Ошибка удаления записи');
+      console.error('Ошибка удаления из истории:', err);
+    }
+  };
+
+  const handleClearHistory = async () => {
+    if (!window.confirm('Вы уверены, что хотите очистить всю историю просмотра?')) {
+      return;
+    }
+
+    try {
+      const user = getCurrentUser();
+      if (user) {
+        await watchHistoryService.clearUserHistory(user.uid);
+        setWatchHistory([]);
+        setWatchHistoryData([]);
+        showSuccess('История просмотра очищена');
+      }
+    } catch (err) {
+      showError('Ошибка очистки истории');
+      console.error('Ошибка очистки истории:', err);
+    }
+  };
+
+  const handleHistoryItemClick = (item) => {
+    if (onNavigate && item.mediaData) {
+      onNavigate('playing', null, {
+        movieId: item.movieId,
+        type: item.mediaType,
+        seasonNumber: item.seasonNumber,
+        episodeNumber: item.episodeNumber
+      });
     }
   };
 
@@ -248,6 +333,12 @@ function Profile({ onNavigate }) {
           >
             Избранное
           </div>
+          <div 
+            className={`tab ${activeTab === 'history' ? 'active' : ''}`}
+            onClick={() => setActiveTab('history')}
+          >
+            История просмотра
+          </div>
         </div>
 
         {activeTab === 'profile' && (
@@ -361,6 +452,94 @@ function Profile({ onNavigate }) {
                 </>
               )}
             </div>
+          </div>
+        )}
+
+        {activeTab === 'history' && (
+          <div className="history-content">
+            <div className="history-header">
+              <h3>История просмотра</h3>
+              {watchHistoryData.length > 0 && (
+                <button className="clear-history-btn" onClick={handleClearHistory}>
+                  Очистить историю
+                </button>
+              )}
+            </div>
+            
+            {loadingHistory ? (
+              <div className="loading-message">Загрузка истории...</div>
+            ) : watchHistoryData.length === 0 ? (
+              <div className="empty-state">
+                <p>История просмотра пуста</p>
+                <p className="empty-state-hint">Начните смотреть фильмы и дорамы, чтобы увидеть их здесь</p>
+              </div>
+            ) : (
+              <div className="history-grid">
+                {watchHistoryData.map((item) => {
+                  if (!item.mediaData) return null;
+                  
+                  const progress = item.progress || 0;
+                  const lastWatched = item.lastWatchedAt 
+                    ? new Date(item.lastWatchedAt).toLocaleDateString('ru-RU', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                      })
+                    : '';
+                  
+                  return (
+                    <div key={item.id} className="history-item">
+                      <div 
+                        className="history-poster"
+                        onClick={() => handleHistoryItemClick(item)}
+                      >
+                        <img 
+                          src={item.mediaData.posterUrl || POSTER_PLACEHOLDER} 
+                          alt={item.mediaData.title}
+                        />
+                        <div className="history-progress-overlay">
+                          <div className="history-progress-bar">
+                            <div 
+                              className="history-progress-filled" 
+                              style={{ width: `${progress}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                        <div className="history-play-overlay">
+                          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="24" cy="24" r="24" fill="rgba(0, 0, 0, 0.6)"/>
+                            <path d="M18 14L34 24L18 34V14Z" fill="white"/>
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="history-info">
+                        <h4 onClick={() => handleHistoryItemClick(item)}>
+                          {item.mediaData.title}
+                        </h4>
+                        {item.seasonNumber && item.episodeNumber && (
+                          <p className="history-episode">
+                            Сезон {item.seasonNumber}, Серия {item.episodeNumber}
+                          </p>
+                        )}
+                        <p className="history-date">{lastWatched}</p>
+                        <p className="history-progress-text">
+                          Просмотрено: {Math.round(progress)}%
+                        </p>
+                        <button 
+                          className="history-delete-btn"
+                          onClick={() => handleDeleteHistoryItem(item.id)}
+                          title="Удалить из истории"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
